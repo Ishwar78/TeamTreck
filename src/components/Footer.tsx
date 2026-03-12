@@ -1,0 +1,133 @@
+import { Link } from "react-router-dom";
+import { Apple, Monitor, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+
+const Footer = () => (
+  <footer
+    className="text-white bg-[#0e2f3f]"
+    // style={{ background: "linear-gradient(to right, #135F80, #2C7862)" }}
+  >
+    <div className="container mx-auto px-6 py-16 max-w-7xl">
+
+      <div className="grid md:grid-cols-5 gap-10">
+
+        {/* Logo & CTA */}
+        <div className="md:col-span-2">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center font-bold text-white">
+              W
+            </div>
+            <span className="text-xl font-bold">TeamTrack</span>
+          </div>
+
+          <p className="text-sm text-white/80 leading-relaxed mb-6 max-w-sm">
+            Thrilled to share that our team tracking and screen monitoring
+            solutions have empowered countless businesses worldwide.
+          </p>
+
+          <Link to="/pricing">
+            <button className="bg-white text-[#135F80] font-semibold px-6 py-3 rounded-full hover:scale-105 transition">
+              Start Free Trial
+            </button>
+          </Link>
+
+          {/* Social Icons */}
+          <div className="mt-8">
+            <h4 className="font-semibold mb-3">Connect</h4>
+            <div className="flex gap-4">
+              {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
+                <div
+                  key={i}
+                  className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center hover:bg-white hover:text-[#135F80] transition cursor-pointer"
+                >
+                  <Icon size={16} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Features */}
+        <div>
+          <h4 className="font-semibold mb-4">Features</h4>
+          <div className="flex flex-col gap-2 text-sm text-white/80">
+            <Link to="/features/time-tracker">Time Tracker</Link>
+            <Link to="/features/team-management">Team Management</Link>
+            <Link to="/features/url-tracking">URL Tracking</Link>
+            <Link to="/features/screenshot-monitoring">Screenshots</Link>
+          </div>
+        </div>
+
+        {/* Company */}
+        <div>
+          <h4 className="font-semibold mb-4">Company</h4>
+          <div className="flex flex-col gap-2 text-sm text-white/80">
+            <Link to="/contact">Contact Us</Link>
+            <Link to="/help">Help Center</Link>
+            <Link to="/privacypolicy">Privacy Policy</Link>
+            <Link to="/About">About Us</Link>
+           
+          </div>
+        </div>
+
+        {/* Download Section */}
+        {/* <div>
+          <h4 className="font-semibold mb-4">Download For</h4>
+
+          <div className="flex flex-col gap-4">
+
+            <button className="flex items-center gap-3 bg-white text-[#135F80] px-5 py-3 rounded-full hover:scale-105 transition">
+              <Apple size={18} />
+              Get For <span className="font-bold">Mac OS</span>
+            </button>
+
+            <button className="flex items-center gap-3 bg-white text-[#135F80] px-5 py-3 rounded-full hover:scale-105 transition">
+              <Monitor size={18} />
+              Get For <span className="font-bold">Windows</span>
+            </button>
+
+            <button className="flex items-center gap-3 bg-white text-[#135F80] px-5 py-3 rounded-full hover:scale-105 transition">
+              🐧
+              Get For <span className="font-bold">Linux</span>
+            </button>
+
+          </div>
+        </div> */}
+<div>
+  <h4 className="font-semibold mb-4">Download For</h4>
+
+  <div className="flex flex-col gap-4">
+
+    <Link to="/download">
+      <button className="w-full flex items-center gap-3 bg-white text-[#135F80] px-5 py-3 rounded-full hover:scale-105 transition">
+        <Apple size={18} />
+        Get For <span className="font-bold">Mac OS</span>
+      </button>
+    </Link>
+
+    <Link to="/download">
+      <button className="w-full flex items-center gap-3 bg-white text-[#135F80] px-5 py-3 rounded-full hover:scale-105 transition">
+        <Monitor size={18} />
+        Get For <span className="font-bold">Windows</span>
+      </button>
+    </Link>
+
+    <Link to="/download">
+      <button className="w-full flex items-center gap-3 bg-white text-[#135F80] px-5 py-3 rounded-full hover:scale-105 transition">
+        🐧
+        Get For <span className="font-bold">Linux</span>
+      </button>
+    </Link>
+
+  </div>
+</div>
+      </div>
+
+      {/* Bottom */}
+      <div className="border-t border-white/20 mt-12 pt-6 text-center text-sm text-white/70">
+        © 2026 TeamTrack. All rights reserved.
+      </div>
+    </div>
+  </footer>
+);
+
+export default Footer;

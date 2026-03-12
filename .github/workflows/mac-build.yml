@@ -1,0 +1,39 @@
+name: Build Mac DMG
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Install Dependencies
+        run: npm install
+        working-directory: agent
+
+      - name: Build Mac x64
+        run: npx electron-builder --mac dmg --x64 --publish=never
+        working-directory: agent
+
+      - name: Build Mac arm64
+        run: npx electron-builder --mac dmg --arm64 --publish=never
+        working-directory: agent
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-build
+          path: agent/dist/*.dmg

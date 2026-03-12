@@ -1,0 +1,30 @@
+directories:
+  output: dist
+  buildResources: build
+appId: com.workwise.agent
+productName: WorkWiseAgent
+copyright: Copyright © 2026 WorkWise
+files:
+  - filter:
+      - main.js
+      - preload.js
+      - renderer/**/*
+      - package.json
+asar: true
+win:
+  target: nsis
+  artifactName: WorkWiseAgent-Setup-${version}.exe
+mac:
+  target: dmg
+  artifactName: WorkWiseAgent-${version}.dmg
+  category: public.app-category.productivity
+  hardenedRuntime: false
+  gatekeeperAssess: false
+linux:
+  target:
+    - AppImage
+    - deb
+  artifactName: WorkWiseAgent-${version}.${ext}
+  category: Utility
+  maintainer: WorkWise <support@workwise.app>
+electronVersion: 28.3.3
