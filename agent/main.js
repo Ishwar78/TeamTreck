@@ -13,6 +13,10 @@ let sessionId = null;
 let currentIdle = false;
 let currentActivityScore = 100;
 
+let keyboardEvents = 0;
+let mouseEvents = 0;
+let mouseDistance = 0;
+
 let isPaused = false; // ✅ ADDED (Nothing Removed)
 
 const API_BASE = "https://mbbsgyan.com";
@@ -40,6 +44,10 @@ app.whenReady().then(createWindow);
 ipcMain.on('activity-state', (event, data) => {
   currentIdle = data.idle;
   currentActivityScore = data.activity_score;
+
+  keyboardEvents = data.keyboard_events || 0;
+  mouseEvents = data.mouse_events || 0;
+  mouseDistance = data.mouse_distance || 0;
 });
 
 /* ================= ACTIVE WINDOW ================= */
@@ -140,11 +148,14 @@ async function getActiveWindow() {
 
 async function sendActivityLog() {
   if (!token || !sessionId || isPaused) return; // ✅ Pause Added
-
+if (keyboardEvents > 0 || mouseEvents > 0) {
+  currentIdle = false;
+  currentActivityScore = 100;
+}
   try {
     const windowInfo = await getActiveWindow();
     const now = new Date();
-    const start = new Date(now.getTime() - 10000);
+    const start = new Date(now.getTime() - 5000);
 
     await axios.post(`${API_BASE}/api/activity`, {
       session_id: sessionId,
@@ -152,9 +163,9 @@ async function sendActivityLog() {
         timestamp: now.toISOString(),
         interval_start: start.toISOString(),
         interval_end: now.toISOString(),
-        keyboard_events: 0,
-        mouse_events: 0,
-        mouse_distance: 0,
+        keyboard_events: keyboardEvents,
+        mouse_events: mouseEvents,
+        mouse_distance: mouseDistance,
         activity_score: currentActivityScore,
         idle: currentIdle,
         active_window: {
@@ -168,10 +179,15 @@ async function sendActivityLog() {
       headers: { Authorization: `Bearer ${token}` }
     });
 
+     keyboardEvents = 0;
+    mouseEvents = 0;
+    mouseDistance = 0;
+
   } catch (err) {
     console.error("Activity error:", err.response?.data || err.message);
   }
 }
+
 
 /* ================= SCREENSHOT ================= */
 
@@ -255,7 +271,7 @@ ipcMain.on('start-session', async (event, data) => {
     await captureScreenshot();
     scheduleNextScreenshot();
 
-    activityInterval = setInterval(sendActivityLog, 15000);
+    activityInterval = setInterval(sendActivityLog, 5000);
 
   } catch (err) {
     console.error("Session start error:", err.response?.data || err.message);
@@ -280,7 +296,7 @@ ipcMain.on('resume-session', () => {
 
   isPaused = false;
 
-  activityInterval = setInterval(sendActivityLog, 15000);
+  activityInterval = setInterval(sendActivityLog, 5000);
   scheduleNextScreenshot();
 
   console.log("Tracking resumed");

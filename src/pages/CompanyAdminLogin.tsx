@@ -194,26 +194,7 @@ const CompanyAdminLogin = () => {
                 </div>
               </div>
 
-              {/* DEMO CREDENTIALS */}
-              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-1.5">
-                <p className="text-[10px] font-medium text-primary">
-                  Demo Credentials
-                </p>
-                <div className="text-[10px] text-muted-foreground space-y-0.5">
-                  <p>
-                    <span className="text-foreground font-medium">
-                      Company Admin:
-                    </span>{" "}
-                    alice@acme.com / admin123
-                  </p>
-                  <p>
-                    <span className="text-foreground font-medium">
-                      User:
-                    </span>{" "}
-                    bob@acme.com / user123
-                  </p>
-                </div>
-              </div>
+             
             </form>
 
             <p className="text-center text-sm text-muted-foreground mt-4">

@@ -9,6 +9,17 @@ let lastActivityTime = Date.now();
 let isIdle = false;
 const IDLE_LIMIT = 3 * 60 * 1000;
 
+/* ================= NEW ACTIVITY TRACKING ================= */
+
+let keyboardEvents = 0;
+let mouseEvents = 0;
+let mouseDistance = 0;
+
+let lastMouseX = 0;
+let lastMouseY = 0;
+
+/* ========================================================== */
+
 if (!deviceId) {
   deviceId = crypto.randomUUID();
   localStorage.setItem("device_id", deviceId);
@@ -27,9 +38,6 @@ const dot = document.querySelector(".dot");
 const deviceText = document.getElementById("deviceText");
 const activityStatus = document.getElementById("activityStatus");
 
-
-
-
 deviceText.innerText = deviceId;
 
 /* ================= STATUS ================= */
@@ -47,13 +55,17 @@ function setStatus(text, type = "info") {
 
 /* ================= TIMER ================= */
 
-let seconds = 0;
+let seconds = parseInt(localStorage.getItem("timer_seconds")) || 0;
 let timerInterval = null;
+
+updateTimerDisplay();
 
 function startTimer() {
   if (timerInterval) return;
+
   timerInterval = setInterval(() => {
     seconds++;
+    localStorage.setItem("timer_seconds", seconds);
     updateTimerDisplay();
   }, 1000);
 }
@@ -85,8 +97,29 @@ function markActivity() {
   }
 }
 
-window.addEventListener("mousemove", markActivity);
-window.addEventListener("keydown", markActivity);
+/* ================= MOUSE + KEYBOARD TRACKING ================= */
+
+window.addEventListener("mousemove", (e) => {
+
+  mouseEvents++;
+
+  mouseDistance += Math.sqrt(
+    Math.pow(e.screenX - lastMouseX, 2) +
+    Math.pow(e.screenY - lastMouseY, 2)
+  );
+
+  lastMouseX = e.screenX;
+  lastMouseY = e.screenY;
+
+  markActivity();
+});
+
+window.addEventListener("keydown", () => {
+  keyboardEvents++;
+  markActivity();
+});
+
+/* ============================================================= */
 
 setInterval(() => {
   if (!isTracking || isPaused) return;
@@ -99,8 +132,8 @@ setInterval(() => {
     activityStatus.classList.add("idle");
     activityStatus.innerText = "Idle";
     setStatus("Idle detected ⚠ (3 min)", "error");
-    // setStatus("Idle detected ⚠ (1 min)", "error");
   }
+
 }, 2000);
 
 /* ================= AUTO LOGIN ================= */
@@ -110,17 +143,12 @@ if (token) {
   loginBtn.style.background = "#28c76f";
   startBtn.disabled = false;
   setStatus("Session Restored ✔", "success");
-
-  // AUTO-START RESTORED SESSION
-  // We should ideally check if session was active. For now, let's trigger start.
-  // In a real app, main process would tell us the status.
-  // Assuming if we have token, we might be active.
-  // Let's just enable buttons. Auto-start on fresh login is key.
 }
 
 /* ================= LOGIN ================= */
 
 loginBtn.onclick = async () => {
+
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
 
@@ -133,15 +161,19 @@ loginBtn.onclick = async () => {
   loginBtn.innerHTML = "⏳ Authenticating...";
 
   try {
-    // const res = await fetch("http://localhost:5000/api/auth/login", {
 
     const res = await fetch(`${API_BASE}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, device_id: deviceId })
+      body: JSON.stringify({
+        email,
+        password,
+        device_id: deviceId
+      })
     });
 
     const data = await res.json();
+
     if (!res.ok) throw new Error();
 
     token = data.token;
@@ -149,12 +181,13 @@ loginBtn.onclick = async () => {
 
     loginBtn.innerHTML = "✔ Logged In";
     loginBtn.style.background = "#28c76f";
+
     startBtn.disabled = false;
 
     setStatus("Login successful ✔", "success");
 
-    // AUTO-START SESSION
     startBtn.onclick();
+
   } catch {
     setStatus("Login failed", "error");
     loginBtn.disabled = false;
@@ -165,54 +198,67 @@ loginBtn.onclick = async () => {
 /* ================= START SESSION ================= */
 
 startBtn.onclick = () => {
-  // Use local time as start if not provided
-  // In real implementation, backend/main should provide the server start time
-  // to avoid drift. For now, we use Date.now() but persist it.
 
-  if (!localStorage.getItem('sessionStartTime')) {
-    localStorage.setItem('sessionStartTime', String(Date.now()));
-  }
+  seconds = parseInt(localStorage.getItem("timer_seconds")) || 0;
 
-  const startTime = parseInt(localStorage.getItem('sessionStartTime'));
-
-  // Calculate seconds based on elapsed time
-  seconds = Math.floor((Date.now() - startTime) / 1000);
-
-  window.agentAPI.startSession({ token, deviceId });
+  window.agentAPI.startSession({
+    token,
+    deviceId
+  });
 
   isTracking = true;
+
   startBtn.disabled = true;
   stopBtn.disabled = false;
   pauseBtn.disabled = false;
 
   dot.classList.add("active");
+
   liveIndicator.lastChild.textContent = " Tracking Active";
 
   startTimer();
+
   setStatus("Tracking started 🚀", "active");
 };
 
 /* ================= PAUSE / RESUME ================= */
 
 pauseBtn.onclick = () => {
+
   if (!isTracking) return;
 
   if (!isPaused) {
+
     isPaused = true;
+
     window.agentAPI.pauseSession();
+
     stopTimer();
+
     dot.classList.remove("active");
+
     liveIndicator.lastChild.textContent = " Paused";
+
     pauseBtn.innerText = "▶ Resume Tracking";
+
     setStatus("Tracking paused ⏸", "error");
+
   } else {
+
     isPaused = false;
+
     window.agentAPI.resumeSession();
+
     lastActivityTime = Date.now();
+
     dot.classList.add("active");
+
     liveIndicator.lastChild.textContent = " Tracking Active";
+
     pauseBtn.innerText = "⏸ Pause Tracking";
+
     startTimer();
+
     setStatus("Tracking resumed ▶", "success");
   }
 };
@@ -220,6 +266,7 @@ pauseBtn.onclick = () => {
 /* ================= STOP SESSION ================= */
 
 stopBtn.onclick = () => {
+
   window.agentAPI.endSession();
 
   isTracking = false;
@@ -228,37 +275,53 @@ stopBtn.onclick = () => {
   stopBtn.disabled = true;
   startBtn.disabled = false;
   pauseBtn.disabled = true;
+
   pauseBtn.innerText = "⏸ Pause Tracking";
 
   dot.classList.remove("active");
+
   liveIndicator.lastChild.textContent = " Not Tracking";
 
   stopTimer();
-  // seconds = 0; // User wants to see the time even after stop/pause
-  // updateTimerDisplay(); // Keep the last time displayed
 
-  // Clear start time
-  localStorage.removeItem('sessionStartTime');
+  localStorage.removeItem("timer_seconds");
+
+  seconds = 0;
+
+  updateTimerDisplay();
 
   setStatus("Tracking stopped ⏹", "error");
 };
 
 /* ================= SEND ACTIVITY ================= */
 
-// REMOVED REPEATED INTERVAL THAT CAUSED CRASH
-
 setInterval(() => {
+
   if (!isTracking || isPaused) return;
 
   window.agentAPI.sendActivityState({
-    idle: isIdle,
-    activity_score: isIdle ? 0 : 100
+
+    // idle: isIdle,
+    // activity_score: isIdle ? 0 : 100,
+
+    activity_score: (keyboardEvents > 0 || mouseEvents > 0) ? 100 : 0,
+idle: (Date.now() - lastActivityTime) > 15000,
+
+    keyboard_events: keyboardEvents,
+    mouse_events: mouseEvents,
+    mouse_distance: mouseDistance
   });
+
+  keyboardEvents = 0;
+  mouseEvents = 0;
+  mouseDistance = 0;
+
 }, 5000);
 
 /* ================= LOGOUT ================= */
 
 logoutBtn.onclick = async () => {
+
   try {
 
     if (isTracking) {
@@ -269,6 +332,7 @@ logoutBtn.onclick = async () => {
     window.agentAPI.logout();
 
     localStorage.removeItem("auth_token");
+
     token = null;
 
     loginBtn.innerHTML = "Login";
@@ -280,9 +344,11 @@ logoutBtn.onclick = async () => {
     pauseBtn.disabled = true;
 
     dot.classList.remove("active");
+
     liveIndicator.lastChild.textContent = " Not Tracking";
 
     seconds = 0;
+
     updateTimerDisplay();
 
     activityStatus.innerText = "Inactive";
@@ -293,4 +359,5 @@ logoutBtn.onclick = async () => {
   } catch (err) {
     setStatus("Logout failed", "error");
   }
+
 };
