@@ -142,27 +142,7 @@ router.get('/timeline', async (req, res) => {
     }
   });
 
-  // Override idle status if covered by a claim
-  const resultLogs = logs.map((log: any) => {
-    const logStart = new Date(log.interval_start).getTime();
-    const logEnd = new Date(log.interval_end).getTime();
-
-    const isClaimed = claims.some(claim => {
-      // Construct claim start/end times
-      const claimStart = new Date(`${claim.date}T${claim.startTime}:00`).getTime();
-      const claimEnd = new Date(`${claim.date}T${claim.endTime}:00`).getTime();
-
-      // Check overlap: Log starts before claim ends AND log ends after claim starts
-      return logStart < claimEnd && logEnd > claimStart;
-    });
-
-    if (isClaimed) {
-      return { ...log, idle: false, claimed: true }; // Force active
-    }
-    return log;
-  });
-
-  res.json({ success: true, logs: resultLogs });
+  res.json({ success: true, logs });
 });
 
 /* =======================================================

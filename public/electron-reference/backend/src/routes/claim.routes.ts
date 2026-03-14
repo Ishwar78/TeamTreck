@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { TimeClaim } from '../models/TimeClaim';
+import { ActivityLog } from '../models/ActivityLog';
 import { authenticate } from '../middleware/auth';
 import { requireRole } from '../middleware/roleGuard';
 import { AppError } from '../utils/errors';
@@ -129,6 +130,35 @@ claimRoutes.put(
             claim.status = status;
             if (status === 'rejected' && rejectionReason) {
                 claim.rejectionReason = rejectionReason;
+            }
+
+            if (status === 'approved') {
+                const claimStart = new Date(`${claim.date}T${claim.startTime.length === 5 ? claim.startTime + ':00' : claim.startTime}`).getTime();
+                const claimEnd = new Date(`${claim.date}T${claim.endTime.length === 5 ? claim.endTime + ':00' : claim.endTime}`).getTime();
+
+                // Find overlapping logs
+                const logs = await ActivityLog.find({
+                    user_id: claim.user_id,
+                    company_id: claim.company_id,
+                    interval_start: {
+                        $gte: new Date(new Date(claim.date).setHours(0, 0, 0, 0)),
+                        $lte: new Date(new Date(claim.date).setHours(23, 59, 59, 999))
+                    }
+                });
+
+                const logIdsToUpdate = logs.filter((log: any) => {
+                    const logStart = new Date(log.interval_start).getTime();
+                    const logEnd = new Date(log.interval_end).getTime();
+                    // Overlap logic: log ends after claim starts AND log starts before claim ends
+                    return logStart < claimEnd && logEnd > claimStart;
+                }).map(l => l._id);
+
+                if (logIdsToUpdate.length > 0) {
+                    await ActivityLog.updateMany(
+                        { _id: { $in: logIdsToUpdate } },
+                        { $set: { idle: false } }
+                    );
+                }
             }
 
             await claim.save();

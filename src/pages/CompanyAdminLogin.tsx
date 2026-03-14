@@ -136,7 +136,10 @@ const CompanyAdminLogin = () => {
 
               {/* PASSWORD */}
               <div>
-                <Label htmlFor="password">Password</Label>
+                <div className="flex justify-between items-center mb-1.5">
+                  <Label htmlFor="password">Password</Label>
+                  <Link to="/forgot-password" className="text-sm font-semibold text-cyan-400 hover:text-cyan-300 transition-colors">Forgot Password?</Link>
+                </div>
                 <div className="relative mt-1.5">
                   <Input
                     id="password"

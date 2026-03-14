@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from "express";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 import { validate } from "../middleware/validate";
 import { authenticate } from "../middleware/auth";
@@ -13,6 +14,7 @@ import { Invitation } from "../models/Invitation";
 import { env } from "../config/env";
 import { AppError } from "../utils/errors";
 import { Session } from "../models/Session";
+import { sendEmail } from "../utils/mailer";
 
 export const authRoutes = Router();
 
@@ -102,7 +104,7 @@ authRoutes.post(
             user.devices.length >= 3
           ) {
             throw new AppError(
-              "Maximum devices reached. Remove a device first.",
+              "Login failed: Maximum allowed devices (3) reached for this user account. Please login from an existing device and remove an old device from your settings first.",
               403
             );
           }
@@ -456,3 +458,77 @@ authRoutes.post(
     }
   }
 );
+
+authRoutes.post("/forgot-password", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email } = req.body;
+    if (!email) throw new AppError("Email is required", 400);
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.json({ success: true, message: "If registered, check your email." });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.resetPasswordExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    await user.save();
+    
+    const resetUrl = `${env.FRONTEND_URL || 'https://mbbsgyan.com'}/reset-password?token=${resetToken}`;
+
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+        <h2>Password Reset Request</h2>
+        <p>We received a request to reset your password. Click the button below to set a new password:</p>
+        <div style="margin: 30px 0;">
+          <a href="${resetUrl}" style="background-color: #135F80; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Reset Password</a>
+        </div>
+        <p>If you didn't request this, please ignore this email. Your password will remain unchanged.</p>
+        <p style="color: #666; font-size: 12px; margin-top: 40px;">This link will expire in 10 minutes.</p>
+      </div>
+    `;
+
+    const emailSent = await sendEmail(
+      email,
+      "TeamTreck - Reset Your Password",
+      emailHtml
+    );
+
+    if (!emailSent) {
+      console.error(`Failed to send reset email to ${email}`);
+    }
+
+    console.log(`[DEV ONLY] Reset Password Link for ${email}: ${resetUrl}`);
+
+    res.json({ success: true, message: "If registered, check your email." });
+  } catch (err) {
+    next(err);
+  }
+});
+
+authRoutes.post("/reset-password", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) throw new AppError("Token and new password required", 400);
+
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) throw new AppError("Invalid or expired token", 400);
+
+    user.password_hash = await bcrypt.hash(newPassword, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    await user.save();
+
+    res.json({ success: true, message: "Password updated successfully" });
+  } catch (err) {
+    next(err);
+  }
+});

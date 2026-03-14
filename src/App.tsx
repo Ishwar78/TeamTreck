@@ -46,6 +46,8 @@ import EmployeeMonitoring from "./pages/solutions/EmployeeMonitoring";
 import TimeReporting from "./pages/solutions/TimeReporting";
 import AgentPanel from "./pages/AgentPanel";
 import SessionTimeline from "./pages/SessionTimeline";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 import UserDetails from "./pages/UserDetails";
 import Client from "./pages/client";
@@ -76,6 +78,8 @@ const App = () => (
               <Route path="/admin/login" element={<CompanyAdminLogin />} />
               <Route path="/super/admin/login" element={<SuperAdminLogin />} />
               <Route path="/signup" element={<SignUp />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/invite/:token" element={<AcceptInvite />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/download" element={<Download />} />

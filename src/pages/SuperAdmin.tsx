@@ -5,7 +5,7 @@ import {
   Building2, BarChart3, CreditCard, Settings, Users, Package,
   LogOut, ChevronLeft, ShieldCheck, TrendingUp, TrendingDown, DollarSign,
   Activity, Ban, CheckCircle2, AlertTriangle, Plus, Search, MoreHorizontal,
-  Eye, UserX, UserCheck, ArrowUpDown, Edit2, Trash2, Mail, Globe, Clock,
+  Eye, EyeOff, UserX, UserCheck, ArrowUpDown, Edit2, Trash2, Mail, Globe, Clock,
   MoreVertical, FileText, LifeBuoy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -275,6 +275,7 @@ function CompaniesTab() {
   const [newCompany, setNewCompany] = useState({
     name: "", email: "", password: "", plan: "", country: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   const filtered = companies.filter(c => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.email.toLowerCase().includes(search.toLowerCase());
@@ -396,14 +397,36 @@ function CompaniesTab() {
           <div className="space-y-4">
             <Input placeholder="Name" value={newCompany.name} onChange={e => setNewCompany({ ...newCompany, name: e.target.value })} />
             <Input placeholder="Email" value={newCompany.email} onChange={e => setNewCompany({ ...newCompany, email: e.target.value })} />
-            <Input placeholder="Password" type="password" value={newCompany.password} onChange={e => setNewCompany({ ...newCompany, password: e.target.value })} />
+            <div className="relative">
+              <Input placeholder="Password" type={showPassword ? "text" : "password"} value={newCompany.password} onChange={e => setNewCompany({ ...newCompany, password: e.target.value })} className="pr-10" />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
             <Select value={newCompany.plan} onValueChange={v => setNewCompany({ ...newCompany, plan: v })}>
               <SelectTrigger><SelectValue placeholder="Select Plan" /></SelectTrigger>
               <SelectContent>
                 {plans.map(p => <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Input placeholder="Country" value={newCompany.country} onChange={e => setNewCompany({ ...newCompany, country: e.target.value })} />
+            <Select value={newCompany.country} onValueChange={v => setNewCompany({ ...newCompany, country: v })}>
+              <SelectTrigger><SelectValue placeholder="Select Country" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="India">India</SelectItem>
+                <SelectItem value="United States">United States</SelectItem>
+                <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+                <SelectItem value="Canada">Canada</SelectItem>
+                <SelectItem value="Australia">Australia</SelectItem>
+                <SelectItem value="Germany">Germany</SelectItem>
+                <SelectItem value="France">France</SelectItem>
+                <SelectItem value="Singapore">Singapore</SelectItem>
+                <SelectItem value="United Arab Emirates">United Arab Emirates</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter>
             <Button onClick={handleCreateCompany}>Create</Button>
