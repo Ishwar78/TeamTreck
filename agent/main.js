@@ -84,6 +84,11 @@ async function getActiveWindow() {
           `osascript -e 'tell application "Safari" to return URL of front document'`
         ).toString().trim();
       }
+      if (appName === "Brave Browser") {
+  url = execSync(
+    `osascript -e 'tell application "Brave Browser" to get URL of active tab of front window'`
+  ).toString().trim();
+}
 
       if (appName === "Microsoft Edge") {
         url = execSync(
@@ -94,6 +99,11 @@ async function getActiveWindow() {
     } catch {}
   }
 
+
+// Incognito workaround
+if (!url && title) {
+  url = title;
+}
   return {
     title,
     app: appName,
@@ -170,7 +180,7 @@ async function captureScreenshot() {
 
     const image = screen.thumbnail.toPNG();
 
-    if (!image || image.length < 1000) {
+  if (!image || image.length < 5000) {
       console.log("Invalid screenshot skipped");
       return;
     }
