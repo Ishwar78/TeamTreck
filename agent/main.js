@@ -3,6 +3,8 @@ const path = require("path");
 const axios = require("axios");
 const FormData = require("form-data");
 const { execSync } = require("child_process");
+const fs = require("fs");
+const os = require("os");
 
 let mainWindow;
 let screenshotTimeout = null;
@@ -84,11 +86,12 @@ async function getActiveWindow() {
           `osascript -e 'tell application "Safari" to return URL of front document'`
         ).toString().trim();
       }
+
       if (appName === "Brave Browser") {
-  url = execSync(
-    `osascript -e 'tell application "Brave Browser" to get URL of active tab of front window'`
-  ).toString().trim();
-}
+        url = execSync(
+          `osascript -e 'tell application "Brave Browser" to get URL of active tab of front window'`
+        ).toString().trim();
+      }
 
       if (appName === "Microsoft Edge") {
         url = execSync(
@@ -99,11 +102,31 @@ async function getActiveWindow() {
     } catch {}
   }
 
+  /* ================= URL CLEAN ================= */
 
-// Incognito workaround
-if (!url && title) {
-  url = title;
-}
+  if (url) {
+
+    try {
+      const parsed = new URL(url);
+      url = parsed.hostname;
+    } catch {}
+
+  }
+
+  /* ================= TITLE FALLBACK ================= */
+
+  if (!url && title) {
+
+    const parts = title.split(" - ");
+
+    if (parts.length > 1) {
+      url = parts[0];
+    } else {
+      url = title;
+    }
+
+  }
+
   return {
     title,
     app: appName,
@@ -169,18 +192,38 @@ async function captureScreenshot() {
 
   try {
 
-    const sources = await desktopCapturer.getSources({
-      types: ["screen"],
-      thumbnailSize: { width: 1920, height: 1080 }
-    });
+    let image;
 
-    if (!sources.length) return;
+    /* ================= MAC FIX ================= */
 
-    const screen = sources.find(s => s.name === "Entire Screen") || sources[0];
+    if (process.platform === "darwin") {
 
-    const image = screen.thumbnail.toPNG();
+      const tempFile = path.join(os.tmpdir(), "agent_screen.png");
 
-  if (!image || image.length < 5000) {
+      execSync(`screencapture -x -t png "${tempFile}"`);
+
+      image = fs.readFileSync(tempFile);
+
+    }
+
+    /* ================= WINDOWS + LINUX (UNCHANGED) ================= */
+
+    else {
+
+      const sources = await desktopCapturer.getSources({
+        types: ["screen"],
+        thumbnailSize: { width: 1920, height: 1080 }
+      });
+
+      if (!sources.length) return;
+
+      const screen = sources.find(s => s.name === "Entire Screen") || sources[0];
+
+      image = screen.thumbnail.toPNG();
+
+    }
+
+    if (!image || image.length < 5000) {
       console.log("Invalid screenshot skipped");
       return;
     }
