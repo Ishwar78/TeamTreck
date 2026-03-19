@@ -29,8 +29,37 @@ const UserUrls = () => {
     const formatDuration = (seconds: number) => {
         const h = Math.floor(seconds / 3600);
         const m = Math.floor((seconds % 3600) / 60);
-        if (h > 0) return `${h}h ${m}m`;
-        return `${m}m`;
+        const s = seconds % 60;
+        if (h > 0) return `${h}h ${m}m ${s}s`;
+        if (m > 0) return `${m}m ${s}s`;
+        return `${s}s`;
+    };
+
+    const formatTime = (dateStr: string) => {
+        const d = new Date(dateStr);
+        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
+
+    const mergeIntervals = (intervals: { start: string, end: string }[]) => {
+        if (!intervals || intervals.length === 0) return [];
+        const sorted = [...intervals].sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+        const merged = [];
+        let current = { ...sorted[0] };
+        for (let i = 1; i < sorted.length; i++) {
+            const next = sorted[i];
+            const currentEnd = new Date(current.end).getTime();
+            const nextStart = new Date(next.start).getTime();
+            if (nextStart <= currentEnd + 15000) {
+                if (new Date(next.end).getTime() > currentEnd) {
+                    current.end = next.end;
+                }
+            } else {
+                merged.push(current);
+                current = { ...next };
+            }
+        }
+        merged.push(current);
+        return merged;
     };
 
     return (
@@ -50,27 +79,50 @@ const UserUrls = () => {
                 </Card>
             ) : (
                 <div className="grid grid-cols-1 gap-4">
-                    {urls.map((item, index) => (
-                        <Card key={index} className="bg-secondary/10 border-border/50">
-                            <CardContent className="p-4 flex items-center justify-between">
-                                <div className="flex items-start gap-3 overflow-hidden">
-                                    <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg mt-0.5">
-                                        <Globe size={18} />
+                    {urls.map((item, index) => {
+                        const merged = mergeIntervals(item.intervals);
+                        const latest = merged[merged.length - 1];
+                        return (
+                            <Card key={index} className="bg-secondary/10 border-border/50 overflow-hidden">
+                                <CardContent className="p-4 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-start gap-3 overflow-hidden">
+                                            <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg mt-0.5">
+                                                <Globe size={18} />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <h3 className="font-medium text-foreground truncate">{item.url}</h3>
+                                                <div className="flex flex-wrap gap-2 mt-1">
+                                                    {latest && (
+                                                        <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">
+                                                            Last: {formatTime(latest.start)} - {formatTime(latest.end)}
+                                                        </span>
+                                                    )}
+                                                    <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
+                                                        {item.visits} visits
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="font-bold text-primary">{formatDuration(item.seconds)}</div>
+                                        </div>
                                     </div>
-                                    <div className="min-w-0">
-                                        <h3 className="font-medium text-foreground truncate">{item.url}</h3>
-                                        <a href={item.url} target="_blank" rel="noreferrer" className="text-sm text-muted-foreground hover:text-primary hover:underline flex items-center gap-1 truncate">
-                                            {item.url} <ExternalLink size={10} />
-                                        </a>
+                                    
+                                    <div className="pt-2 border-t border-border/50">
+                                        <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider mb-2">Usage Timeline</p>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {merged.map((iv, i) => (
+                                                <span key={i} className="text-[9px] font-mono bg-secondary/30 px-2 py-0.5 rounded border border-border/30">
+                                                    {formatTime(iv.start)} - {formatTime(iv.end)}
+                                                </span>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="text-right whitespace-nowrap pl-4">
-                                    <div className="font-bold text-primary">{formatDuration(item.seconds)}</div>
-                                    <div className="text-xs text-muted-foreground">{item.visits} visits</div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
                 </div>
             )}
         </div>

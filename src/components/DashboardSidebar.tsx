@@ -30,7 +30,7 @@ const menuItems: MenuItem[] = [
   { icon: BarChart3, label: "Reports", path: "/dashboard/reports", permission: "view_reports" },
   { icon: UserPlus, label: "Invite Members", path: "/dashboard/invite", permission: "invite_members" },
   // { icon: FileText, label: "API Spec", path: "/dashboard/api-spec", permission: "view_api_spec" },
-  // { icon: Bell, label: "Notifications", path: "/dashboard/notifications", permission: "view_notifications" },
+  { icon: Bell, label: "Notifications", path: "/dashboard/notifications", permission: "manage_team" },
   // { icon: ShieldBan, label: "Restrictions", path: "/dashboard/restrictions", permission: "configure_monitoring" },
   { icon: Timer, label: "Justifications", path: "/dashboard/justifications", permission: "view_time_logs" },
   { icon: FileText, label: "Time Claims", path: "/dashboard/time-claim", permission: "manage_team" },
@@ -39,6 +39,7 @@ const menuItems: MenuItem[] = [
   { icon: CreditCard, label: "Billing", path: "/dashboard/billing", permission: "manage_billing" },
   { icon: Settings, label: "Settings", path: "/dashboard/settings", permission: "manage_settings" },
   { icon: LifeBuoy, label: "Support Tickets", path: "/dashboard/support", permission: "manage_settings" },
+
 ];
 
 interface DashboardSidebarProps {

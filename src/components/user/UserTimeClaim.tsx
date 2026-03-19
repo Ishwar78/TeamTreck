@@ -109,6 +109,8 @@ const UserTimeClaim = () => {
         const endTs = new Date(timeline[timeline.length - 1].end).getTime();
         const totalDuration = endTs - startTs;
 
+        const approvedClaims = claims.filter(c => c.status === 'approved' && c.date === formData.date);
+
         return (
             <div className="space-y-4">
                 <div className="flex justify-between text-[10px] text-muted-foreground px-1">
@@ -117,6 +119,7 @@ const UserTimeClaim = () => {
                     <span>{format(new Date(endTs), "hh:mm a")}</span>
                 </div>
                 <div className="h-8 w-full flex rounded-lg overflow-hidden border border-border shadow-inner bg-secondary/20 relative group">
+                    {/* Underlying Timeline (Work vs Offline) */}
                     {timeline.map((seg, idx) => {
                         const segStart = new Date(seg.start).getTime();
                         const segEnd = new Date(seg.end).getTime();
@@ -130,6 +133,31 @@ const UserTimeClaim = () => {
                                 className={`h-full ${bgColor} transition-colors relative cursor-help transition-all duration-200`}
                                 style={{ width: `${width}%` }}
                                 title={`${seg.type}: ${timeRange} (${seg.duration})`}
+                            />
+                        );
+                    })}
+
+                    {/* OVERLAY APPROVED CLAIMS TO MASK IDLE TIME/GAPS */}
+                    {approvedClaims.map((claim, idx) => {
+                        const startTimeStr = claim.startTime.length === 5 ? claim.startTime + ':00' : claim.startTime;
+                        const endTimeStr = claim.endTime.length === 5 ? claim.endTime + ':00' : claim.endTime;
+                        const claimStart = new Date(`${claim.date}T${startTimeStr}`).getTime();
+                        const claimEnd = new Date(`${claim.date}T${endTimeStr}`).getTime();
+
+                        // limit to boundaries 
+                        const effectiveStart = Math.max(startTs, claimStart); 
+                        const effectiveEnd = Math.min(endTs, claimEnd); 
+                        if (effectiveStart >= effectiveEnd) return null;
+
+                        const left = ((effectiveStart - startTs) / totalDuration) * 100;
+                        const width = ((effectiveEnd - effectiveStart) / totalDuration) * 100;
+
+                        return (
+                            <div
+                                key={`claim-${idx}`}
+                                className="absolute top-0 bottom-0 bg-green-500/90 hover:bg-green-400 cursor-help z-10"
+                                style={{ left: `${left}%`, width: `${width}%` }}
+                                title={`Approved Claim: ${claim.startTime} - ${claim.endTime}`}
                             />
                         );
                     })}

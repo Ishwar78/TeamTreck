@@ -24,14 +24,10 @@
   },
 
   "include": ["src/**/*"],
-<<<<<<< HEAD
+ 
   "exclude": [
     "node_modules",
     "dist",
     "src/__tests__"
   ]
 }
-=======
-  "exclude": ["node_modules", "dist", "src/__tests__"]
-}
->>>>>>> 5d890cc (upload render backend and support ticket)

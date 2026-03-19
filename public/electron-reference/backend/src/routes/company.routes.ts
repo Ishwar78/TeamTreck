@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { z } from 'zod';
@@ -79,12 +80,28 @@ router.get(
   requireRole('company_admin', 'sub_admin'),
   async (req, res) => {
     console.log('Entering /users handler, company_id:', req.auth!.company_id);
-    const users = await User.find({
+    const users: any = await User.find({
       company_id: req.auth!.company_id,
       role: { $ne: 'super_admin' },
-    }).select('-password_hash');
+    }).select('-password_hash').lean();
 
-    res.json({ users });
+    // Check online status (ActiveLog in last 5 minutes)
+    const { ActivityLog } = await import('../models/ActivityLog');
+    const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000);
+
+    const activeUsers = await ActivityLog.distinct('user_id', {
+      company_id: req.auth!.company_id,
+      timestamp: { $gte: fiveMinsAgo }
+    });
+
+    const activeUserIdsMap = new Set(activeUsers.map(id => id.toString()));
+
+    const usersWithStatus = users.map((u: any) => ({
+      ...u,
+      isActive: activeUserIdsMap.has(u._id.toString())
+    }));
+
+    res.json({ users: usersWithStatus });
   }
 );
 
@@ -237,6 +254,44 @@ router.post('/tickets/:id/reply', authenticate, requireRole('company_admin'), as
     await ticket.save();
     res.json({ success: true, data: ticket });
   } catch (err) { next(err); }
+});
+
+/* ================= SEND NOTIFICATIONS ================= */
+import { sendEmail } from '../utils/mailer';
+
+router.post('/notifications/send', authenticate, requireRole('company_admin'), async (req: any, res, next) => {
+  try {
+    const { userIds, subject, message } = req.body;
+    
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      throw new AppError('No users selected', 400);
+    }
+    if (!message) {
+      throw new AppError('Message is required', 400);
+    }
+
+    const company = await Company.findById(req.auth!.company_id);
+    if (!company) throw new AppError('Company not found', 404);
+
+    const users = await User.find({
+      _id: { $in: userIds },
+      company_id: req.auth!.company_id 
+    });
+
+    let sentCount = 0;
+    for (const user of users) {
+      if (user.email) {
+        const emailSubject = subject || `Notification from ${company.name} Admin`;
+        const emailHtml = `<p>Hello ${user.name},</p><p>${message.replace(/\n/g, '<br>')}</p>`;
+        const success = await sendEmail(user.email, emailSubject, emailHtml);
+        if (success) sentCount++;
+      }
+    }
+
+    res.json({ success: true, message: `Successfully sent ${sentCount} notifications`, sentCount });
+  } catch (err) {
+    next(err);
+  }
 });
 
 export const companyRoutes = router;

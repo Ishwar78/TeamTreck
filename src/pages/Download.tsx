@@ -86,8 +86,10 @@ const platforms = [
     version: "v1.0.0",
     size: "76 MB",
     ext: ".exe",
-    file: "WorkWiseAgent-Setup-1.0.0.exe",
-    downloadUrl: `${DOWNLOAD_BASE}/WorkWiseAgent-Setup-1.0.0.exe`,
+    // file: "WorkWiseAgent-Setup-1.0.0.exe",
+    // downloadUrl: `${DOWNLOAD_BASE}/WorkWiseAgent-Setup-1.0.0.exe`,
+    file: "TeamTrexAgent-Setup-1.0.0.exe",
+    downloadUrl: `${DOWNLOAD_BASE}/TeamTrexAgent-Setup-1.0.0.exe`,
     minOs: "Windows 10 (64-bit) or later",
     steps: [
       "Download installer",
@@ -189,13 +191,13 @@ const detectOS = (): string => {
   if (ua.includes("win")) return "Windows";
   if (ua.includes("mac")) return "macOS (Intel)";
   if (ua.includes("linux") && !ua.includes("android")) return "Linux";
- 
+
   return "";
 };
 
 
 
- 
+
 const DownloadPage = () => {
   const detectedOS = useMemo(() => detectOS(), []);
   // const handleDownload = (platformName: string, url: string) => {
@@ -261,8 +263,8 @@ const DownloadPage = () => {
                   variants={fadeUp}
                   custom={i}
                   className={`rounded-xl bg-gradient-card border p-6 transition-all duration-300 ${isDetected
-                      ? "border-primary ring-2 ring-primary/20 shadow-glow scale-[1.02]"
-                      : "border-border hover:border-primary/30 hover:shadow-glow"
+                    ? "border-primary ring-2 ring-primary/20 shadow-glow scale-[1.02]"
+                    : "border-border hover:border-primary/30 hover:shadow-glow"
                     }`}
                 >
                   <div className="text-center mb-4">

@@ -78,10 +78,10 @@ const TeamManagement = () => {
               Manage your team and their permissions
             </p>
           </div>
-          <Button onClick={() => setAddDialog(true)} className="gap-2 w-full sm:w-auto">
+          {/* <Button onClick={() => setAddDialog(true)} className="gap-2 w-full sm:w-auto">
             <Plus size={16} />
             Add Team Member
-          </Button>
+          </Button> */}
         </div>
 
         {/* Stats Cards */}
@@ -171,7 +171,7 @@ const TeamManagement = () => {
         </Card>
 
         {/* Add Member Dialog */}
-        <Dialog open={addDialog} onOpenChange={setAddDialog}>
+        {/* <Dialog open={addDialog} onOpenChange={setAddDialog}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add Team Member</DialogTitle>
@@ -218,7 +218,7 @@ const TeamManagement = () => {
               <Button onClick={handleAddMember}>Send Invitation</Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+        </Dialog> */}
       </div>
     </DashboardLayout>
   );

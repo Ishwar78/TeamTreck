@@ -57,7 +57,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import HelpCenter from "./pages/HelpCenter";
 import ScrollToTop from "./components/ScrollToTop";
 import About from "./pages/About";
-
+import Terms from "./pages/Terms";
 
 const queryClient = new QueryClient();
 
@@ -102,7 +102,7 @@ const App = () => (
               <Route path="/support" element={<ScrollToTop />} />
               <Route path="/about" element={<About />} />
 
-
+<Route path="/terms" element={<Terms />} />
 
               {/* Company Dashboard */}
               <Route path="/dashboard" element={<CompanyAdminAuthGuard><Dashboard /></CompanyAdminAuthGuard>} />

@@ -23,6 +23,8 @@ const CompanyAdminLogin = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+
   const [otpStep, setOtpStep] = useState(false);
   const [otpPhone, setOtpPhone] = useState("");
   const [redirectTo, setRedirectTo] = useState("/dashboard");
@@ -38,6 +40,12 @@ const CompanyAdminLogin = () => {
 
     if (!email.trim() || !password.trim()) {
       setError("Please enter both email and password.");
+      return;
+    }
+
+    /* TERMS VALIDATION */
+    if (!acceptTerms) {
+      setError("Please accept the Terms & Conditions before logging in.");
       return;
     }
 
@@ -81,7 +89,10 @@ const CompanyAdminLogin = () => {
 
   if (otpStep) {
     return (
-      <div className="min-h-screen text-white flex flex-col" style={{ background: 'linear-gradient(to right, #135F80, #2C7862)' }}>
+      <div
+        className="min-h-screen text-white flex flex-col"
+        style={{ background: "linear-gradient(to right, #135F80, #2C7862)" }}
+      >
         <Navbar />
         <div className="flex-1 flex items-center justify-center px-4 pt-16">
           <OtpVerification
@@ -97,7 +108,10 @@ const CompanyAdminLogin = () => {
   /* ================= UI ================= */
 
   return (
-    <div className="min-h-screen text-white flex flex-col" style={{ background: 'linear-gradient(to right, #135F80, #2C7862)' }}>
+    <div
+      className="min-h-screen text-white flex flex-col"
+      style={{ background: "linear-gradient(to right, #135F80, #2C7862)" }}
+    >
       <Navbar />
 
       <div className="flex-1 flex items-center justify-center px-4 pt-16">
@@ -138,8 +152,14 @@ const CompanyAdminLogin = () => {
               <div>
                 <div className="flex justify-between items-center mb-1.5">
                   <Label htmlFor="password">Password</Label>
-                  <Link to="/forgot-password" className="text-sm font-semibold text-cyan-400 hover:text-cyan-300 transition-colors">Forgot Password?</Link>
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm font-semibold text-cyan-400 hover:text-cyan-300 transition-colors"
+                  >
+                    Forgot Password?
+                  </Link>
                 </div>
+
                 <div className="relative mt-1.5">
                   <Input
                     id="password"
@@ -148,6 +168,7 @@ const CompanyAdminLogin = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
+
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -160,6 +181,28 @@ const CompanyAdminLogin = () => {
                     )}
                   </button>
                 </div>
+              </div>
+
+              {/* TERMS & CONDITIONS */}
+              <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                  className="mt-1"
+                />
+
+                <p>
+                  I agree to the{" "}
+                  <Link
+                    to="/terms"
+                    className="text-primary underline hover:text-cyan-400"
+                  >
+                    Terms & Conditions
+                  </Link>{" "}
+                  and understand that the desktop agent may monitor screenshots,
+                  website usage, and application activity during work hours.
+                </p>
               </div>
 
               {/* ERROR */}
@@ -186,6 +229,7 @@ const CompanyAdminLogin = () => {
                   size={16}
                   className="text-primary mt-0.5 shrink-0"
                 />
+
                 <div>
                   <p className="text-xs font-medium text-foreground">
                     Desktop Agent Login
@@ -196,8 +240,6 @@ const CompanyAdminLogin = () => {
                   </p>
                 </div>
               </div>
-
-             
             </form>
 
             <p className="text-center text-sm text-muted-foreground mt-4">

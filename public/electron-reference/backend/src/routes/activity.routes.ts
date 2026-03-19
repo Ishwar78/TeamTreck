@@ -3,7 +3,7 @@ import { Types } from 'mongoose';
 import { z } from 'zod';
 import { authenticate } from '../middleware/auth';
 import { enforceTenant } from '../middleware/tenantIsolation';
-import { requireRole } from '../middleware/roleGuard';
+import { requireRole } from '../middleware/roleGuard'; 
 import { validate } from '../middleware/validate';
 import { ActivityLog } from '../models/ActivityLog';
 import { TimeClaim } from '../models/TimeClaim';
@@ -140,9 +140,28 @@ router.get('/timeline', async (req, res) => {
       $gte: new Date(start_date as string).toISOString().split('T')[0],
       $lte: new Date(end_date as string).toISOString().split('T')[0]
     }
+  }).lean();
+
+  // Overlay claims on logs - ensuring they show as active (idle: false)
+  const updatedLogs = logs.map(log => {
+      const logStart = new Date(log.interval_start).getTime();
+      const logEnd = new Date(log.interval_end).getTime();
+      
+      const isClaimed = claims.some(claim => {
+          const claimDate = claim.date; // YYYY-MM-DD
+          const cStart = new Date(`${claimDate}T${claim.startTime.length === 5 ? claim.startTime + ':00' : claim.startTime}`).getTime();
+          const cEnd = new Date(`${claimDate}T${claim.endTime.length === 5 ? claim.endTime + ':00' : claim.endTime}`).getTime();
+          
+          return logStart < cEnd && logEnd > cStart;
+      });
+
+      if (isClaimed) {
+          return { ...log, idle: false };
+      }
+      return log;
   });
 
-  res.json({ success: true, logs });
+  res.json({ success: true, logs: updatedLogs, claims });
 });
 
 /* =======================================================
@@ -189,7 +208,13 @@ router.get('/usage', async (req, res, next) => {
             }
           },
           users: { $addToSet: "$user_id" },
-          category: { $first: "$active_window.category" }
+          category: { $first: "$active_window.category" },
+          intervals: {
+            $push: {
+              start: "$interval_start",
+              end: "$interval_end"
+            }
+          }
         }
       },
       {
@@ -198,7 +223,8 @@ router.get('/usage', async (req, res, next) => {
           name: "$_id",
           seconds: { $round: ["$totalSeconds", 0] },
           users: { $size: "$users" },
-          category: { $ifNull: ["$category", "Other"] }
+          category: { $ifNull: ["$category", "Other"] },
+          intervals: 1
         }
       },
       { $sort: { seconds: -1 } }
@@ -283,7 +309,13 @@ router.get('/usage', async (req, res, next) => {
             }
           },
           visits: { $sum: 1 },
-          category: { $first: "$active_window.category" }
+          category: { $first: "$active_window.category" },
+          intervals: {
+            $push: {
+              start: "$interval_start",
+              end: "$interval_end"
+            }
+          }
         }
       },
       {
@@ -292,7 +324,8 @@ router.get('/usage', async (req, res, next) => {
           url: "$_id",
           seconds: { $round: ["$totalSeconds", 0] },
           visits: 1,
-          category: { $ifNull: ["$category", "Web"] }
+          category: { $ifNull: ["$category", "Web"] },
+          intervals: 1
         }
       },
       { $sort: { seconds: -1 } }

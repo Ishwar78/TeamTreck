@@ -32,8 +32,8 @@ async function main() {
 
     const token = jwt.sign(payload, JWT_PRIVATE_KEY, {
         algorithm: "HS256",
-        expiresIn: "1h",
-    });
+       expiresIn: "30d",
+    }); 
 
     console.log('TOKEN_START');
     console.log(token);

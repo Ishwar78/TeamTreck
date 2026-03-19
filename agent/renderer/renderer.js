@@ -7,7 +7,7 @@ let isPaused = false;
 
 let lastActivityTime = Date.now();
 let isIdle = false;
-const IDLE_LIMIT = 3 * 60 * 1000;
+const IDLE_LIMIT = 3 * 60 * 1000; 
 
 /* ================= NEW ACTIVITY TRACKING ================= */
 
@@ -17,6 +17,12 @@ let mouseDistance = 0;
 
 let lastMouseX = 0;
 let lastMouseY = 0;
+
+/* ================= TIMER FIX ================= */
+
+let seconds = 0;
+let timerInterval = null;
+let sessionStartTime = null;
 
 /* ========================================================== */
 
@@ -55,18 +61,19 @@ function setStatus(text, type = "info") {
 
 /* ================= TIMER ================= */
 
-let seconds = parseInt(localStorage.getItem("timer_seconds")) || 0;
-let timerInterval = null;
-
 updateTimerDisplay();
 
 function startTimer() {
   if (timerInterval) return;
 
   timerInterval = setInterval(() => {
-    seconds++;
-    localStorage.setItem("timer_seconds", seconds);
+
+    if (!sessionStartTime) return;
+
+    seconds = Math.floor((Date.now() - sessionStartTime) / 1000);
+
     updateTimerDisplay();
+
   }, 1000);
 }
 
@@ -128,10 +135,23 @@ setInterval(() => {
   const idleTime = now - lastActivityTime;
 
   if (idleTime >= IDLE_LIMIT && !isIdle) {
+
     isIdle = true;
+
     activityStatus.classList.add("idle");
     activityStatus.innerText = "Idle";
+
     setStatus("Idle detected ⚠ (3 min)", "error");
+
+  }
+
+  if (idleTime < IDLE_LIMIT && isIdle) {
+
+    isIdle = false;
+
+    activityStatus.classList.remove("idle");
+    activityStatus.innerText = "Active";
+
   }
 
 }, 2000);
@@ -199,7 +219,7 @@ loginBtn.onclick = async () => {
 
 startBtn.onclick = () => {
 
-  seconds = parseInt(localStorage.getItem("timer_seconds")) || 0;
+  sessionStartTime = Date.now(); // ✅ FIX
 
   window.agentAPI.startSession({
     token,
@@ -284,7 +304,7 @@ stopBtn.onclick = () => {
 
   stopTimer();
 
-  localStorage.removeItem("timer_seconds");
+  sessionStartTime = null; // ✅ FIX
 
   seconds = 0;
 
@@ -301,15 +321,18 @@ setInterval(() => {
 
   window.agentAPI.sendActivityState({
 
-    // idle: isIdle,
-    // activity_score: isIdle ? 0 : 100,
+    idle: isIdle,
 
-    activity_score: (keyboardEvents > 0 || mouseEvents > 0) ? 100 : 0,
-idle: (Date.now() - lastActivityTime) > 15000,
+    activity_score: isIdle ? 0 : (
+      keyboardEvents > 5 ? 100 :
+      mouseEvents > 10 ? 80 :
+      mouseDistance > 50 ? 60 : 50
+    ),
 
     keyboard_events: keyboardEvents,
     mouse_events: mouseEvents,
     mouse_distance: mouseDistance
+
   });
 
   keyboardEvents = 0;
@@ -348,6 +371,7 @@ logoutBtn.onclick = async () => {
     liveIndicator.lastChild.textContent = " Not Tracking";
 
     seconds = 0;
+    sessionStartTime = null;
 
     updateTimerDisplay();
 

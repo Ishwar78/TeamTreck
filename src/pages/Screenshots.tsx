@@ -18,7 +18,6 @@ import { format } from "date-fns";
 // const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
-
 const Screenshots = () => {
   const { token, user } = useAuth();
   const { can, role } = usePermissions();
@@ -31,6 +30,9 @@ const Screenshots = () => {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
+
+  // ✅ SEARCH STATE
+  const [searchTerm, setSearchTerm] = useState("");
 
   /* ================= INITIAL LOAD ================= */
 
@@ -91,6 +93,13 @@ const Screenshots = () => {
     (m) => m._id === selectedUser
   );
 
+  // ✅ FILTERED USERS
+  const filteredMembers = teamMembers.filter((member) =>
+    `${member.name} ${member.email}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -106,24 +115,38 @@ const Screenshots = () => {
             </p>
           </div>
 
-          {/* Admin Selector */}
+          {/* ✅ SEARCH + SELECT */}
           {isAdmin && teamMembers.length > 0 && (
-            <Select value={selectedUser} onValueChange={setSelectedUser}>
-              <SelectTrigger className="w-64 bg-card border-border">
-                <Users size={14} className="mr-2 text-muted-foreground" />
-                <SelectValue placeholder="Select Employee" />
-              </SelectTrigger>
-              <SelectContent>
-                {teamMembers.map((member) => (
-                  <SelectItem
-                    key={member._id}
-                    value={member._id}
-                  >
-                    {member.name} ({member.email})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-3">
+              
+              {/* SEARCH BAR */}
+              <input
+                type="text"
+                placeholder="Search name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="border px-3 py-2 rounded-md w-64 text-sm bg-card border-border outline-none"
+              />
+
+              {/* SELECT */}
+              <Select value={selectedUser} onValueChange={setSelectedUser}>
+                <SelectTrigger className="w-64 bg-card border-border">
+                  <Users size={14} className="mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Select Employee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredMembers.map((member) => (
+                    <SelectItem
+                      key={member._id}
+                      value={member._id}
+                    >
+                      {member.name} ({member.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+            </div>
           )}
         </div>
 
@@ -227,10 +250,8 @@ const Screenshots = () => {
 
                 {/* IMAGE PREVIEW FIXED */}
                 <CardContent className="p-0">
-                  {/* <img
-                    src={`${API_BASE}/api/agent/screenshots/view/${shot._id}`} */}
-                    <img
-  src={`${API_BASE}/api/agent/screenshots/view/${shot._id}?token=${token}`}
+                  <img
+                    src={`${API_BASE}/api/agent/screenshots/view/${shot._id}?token=${token}`}
                     className="w-full h-56 object-cover cursor-pointer"
                     alt="Screenshot"
                     crossOrigin="anonymous"

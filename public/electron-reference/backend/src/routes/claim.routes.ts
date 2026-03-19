@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { TimeClaim } from '../models/TimeClaim';
 import { ActivityLog } from '../models/ActivityLog';
+import { Session } from '../models/Session';
 import { authenticate } from '../middleware/auth';
 import { requireRole } from '../middleware/roleGuard';
 import { AppError } from '../utils/errors';
@@ -133,31 +134,57 @@ claimRoutes.put(
             }
 
             if (status === 'approved') {
-                const claimStart = new Date(`${claim.date}T${claim.startTime.length === 5 ? claim.startTime + ':00' : claim.startTime}`).getTime();
-                const claimEnd = new Date(`${claim.date}T${claim.endTime.length === 5 ? claim.endTime + ':00' : claim.endTime}`).getTime();
+                // Parse date more robustly. Assume dates are local and convert to UTC for DB matching if needed.
+                // However, most internal dates should be handled as UTC.
+                // Let's ensure we parse correctly.
+                const parseDate = (d: string, t: string) => {
+                    return new Date(`${d}T${t.length === 5 ? t + ':00' : t}`);
+                };
 
-                // Find overlapping logs
+                const claimStart = parseDate(claim.date, claim.startTime).getTime();
+                const claimEnd = parseDate(claim.date, claim.endTime).getTime();
+
+                // Find overlapping logs that are currently idle
                 const logs = await ActivityLog.find({
                     user_id: claim.user_id,
                     company_id: claim.company_id,
+                    idle: true,
                     interval_start: {
                         $gte: new Date(new Date(claim.date).setHours(0, 0, 0, 0)),
                         $lte: new Date(new Date(claim.date).setHours(23, 59, 59, 999))
                     }
                 });
 
-                const logIdsToUpdate = logs.filter((log: any) => {
+                const logsToUpdate = logs.filter((log: any) => {
                     const logStart = new Date(log.interval_start).getTime();
                     const logEnd = new Date(log.interval_end).getTime();
-                    // Overlap logic: log ends after claim starts AND log starts before claim ends
                     return logStart < claimEnd && logEnd > claimStart;
-                }).map(l => l._id);
+                });
 
-                if (logIdsToUpdate.length > 0) {
+                if (logsToUpdate.length > 0) {
+                    const logIds = logsToUpdate.map(l => l._id);
                     await ActivityLog.updateMany(
-                        { _id: { $in: logIdsToUpdate } },
+                        { _id: { $in: logIds } },
                         { $set: { idle: false } }
                     );
+
+                    // Update session summaries
+                    // Group by session_id in case logs span multiple sessions
+                    const sessionsMap = new Map<string, number>();
+                    logsToUpdate.forEach((log: any) => {
+                        const sid = log.session_id.toString();
+                        const duration = Math.floor((new Date(log.interval_end).getTime() - new Date(log.interval_start).getTime()) / 1000);
+                        sessionsMap.set(sid, (sessionsMap.get(sid) || 0) + duration);
+                    });
+
+                    for (const [sessionId, duration] of sessionsMap.entries()) {
+                        await Session.findByIdAndUpdate(sessionId, {
+                            $inc: {
+                                "summary.active_duration": duration,
+                                "summary.idle_duration": -duration
+                            }
+                        });
+                    }
                 }
             }
 

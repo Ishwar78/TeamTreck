@@ -148,7 +148,15 @@ export const PlatformProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updatePlan = async (id: string, updates: any) => {
-    await api.put(`/plans/${id}`, updates);
+    const mappedUpdates: any = {};
+    if (updates.name !== undefined) mappedUpdates.name = updates.name;
+    if (updates.price !== undefined) mappedUpdates.price_monthly = Number(updates.price);
+    if (updates.users !== undefined) mappedUpdates.max_users = Number(updates.users);
+    if (updates.screenshots !== undefined) mappedUpdates.screenshots_per_hour = parseInt(updates.screenshots);
+    if (updates.retention !== undefined) mappedUpdates.data_retention = updates.retention;
+    if (updates.features !== undefined) mappedUpdates.features = updates.features;
+
+    await api.put(`/plans/${id}`, mappedUpdates);
     fetchData();
   };
 
@@ -172,7 +180,12 @@ export const PlatformProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateCompany = async (id: string, updates: any) => {
-    await api.put(`/companies/${id}`, updates);
+    const mappedUpdates = { ...updates };
+    if (mappedUpdates.plan) {
+      mappedUpdates.plan_name = mappedUpdates.plan;
+      delete mappedUpdates.plan;
+    }
+    await api.put(`/companies/${id}`, mappedUpdates);
     fetchData();
   };
 

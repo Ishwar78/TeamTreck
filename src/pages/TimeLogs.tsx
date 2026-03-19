@@ -14,6 +14,7 @@ const TimeLogs = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [logs, setLogs] = useState<any[]>([]);
+  const [claims, setClaims] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [searchTerm, setSearchTerm] = useState("");
@@ -46,6 +47,7 @@ const TimeLogs = () => {
         );
 
         setLogs(data.logs || []);
+        setClaims(data.claims || []);
       } catch (err) {
         console.error(err);
       } finally {
@@ -59,37 +61,110 @@ const TimeLogs = () => {
   /* ================= TIMELINE DATA ================= */
 
   const timelineData = useMemo(() => {
-    if (!logs.length) return [];
-
     const dayStart = startOfDay(currentDate).getTime();
     const dayEnd = endOfDay(currentDate).getTime();
     const dayDuration = dayEnd - dayStart;
 
-    return logs.map(log => {
+    const items: any[] = [];
+
+    // Process logs
+    (logs || []).forEach(log => {
       const start = new Date(log.interval_start).getTime();
       const end = new Date(log.interval_end).getTime();
 
-      return {
+      let isIdle = log.idle;
+
+      const isClaimed = (claims || []).some(claim => {
+        const claimDate = claim.date;
+        const startTimeStr = claim.startTime.length === 5 ? claim.startTime + ':00' : claim.startTime;
+        const endTimeStr = claim.endTime.length === 5 ? claim.endTime + ':00' : claim.endTime;
+        const cStart = new Date(`${claimDate}T${startTimeStr}`).getTime();
+        const cEnd = new Date(`${claimDate}T${endTimeStr}`).getTime();
+        return start < cEnd && end > cStart;
+      });
+
+      if (isClaimed) {
+        isIdle = false;
+      }
+
+      items.push({
         id: log._id,
         left: ((start - dayStart) / dayDuration) * TIMELINE_WIDTH,
         width: ((end - start) / dayDuration) * TIMELINE_WIDTH,
-        idle: log.idle,
+        idle: isIdle,
         startStr: format(new Date(log.interval_start), "hh:mm a"),
         endStr: format(new Date(log.interval_end), "hh:mm a"),
-      };
+        zIndex: 10
+      });
     });
-  }, [logs, currentDate]);
+
+    // Process claims
+    (claims || []).forEach(claim => {
+      const claimDate = claim.date;
+      const startTimeStr = claim.startTime.length === 5 ? claim.startTime + ':00' : claim.startTime;
+      const endTimeStr = claim.endTime.length === 5 ? claim.endTime + ':00' : claim.endTime;
+      const start = new Date(`${claimDate}T${startTimeStr}`).getTime();
+      const end = new Date(`${claimDate}T${endTimeStr}`).getTime();
+
+      items.push({
+        id: claim._id + "-claim",
+        left: ((start - dayStart) / dayDuration) * TIMELINE_WIDTH,
+        width: ((end - start) / dayDuration) * TIMELINE_WIDTH,
+        idle: false,
+        startStr: format(start, "hh:mm a") + " (Claimed)",
+        endStr: format(end, "hh:mm a"),
+        zIndex: 5,
+        isClaimBg: true
+      });
+    });
+
+    return items;
+  }, [logs, claims, currentDate]);
 
   const totalWork = useMemo(() => {
-    const totalMs = logs.reduce((acc, log) => {
-      return acc + (new Date(log.interval_end).getTime() - new Date(log.interval_start).getTime());
-    }, 0);
+    const activeIntervals: { start: number; end: number }[] = [];
 
+    (logs || []).forEach(log => {
+      if (!log.idle) {
+        activeIntervals.push({
+          start: new Date(log.interval_start).getTime(),
+          end: new Date(log.interval_end).getTime()
+        });
+      }
+    });
+
+    (claims || []).forEach(claim => {
+      const claimDate = claim.date;
+      const startTimeStr = claim.startTime.length === 5 ? claim.startTime + ':00' : claim.startTime;
+      const endTimeStr = claim.endTime.length === 5 ? claim.endTime + ':00' : claim.endTime;
+      activeIntervals.push({
+        start: new Date(`${claimDate}T${startTimeStr}`).getTime(),
+        end: new Date(`${claimDate}T${endTimeStr}`).getTime()
+      });
+    });
+
+    activeIntervals.sort((a, b) => a.start - b.start);
+
+    const merged: { start: number; end: number }[] = [];
+    if (activeIntervals.length > 0) {
+      merged.push({ ...activeIntervals[0] });
+      for (let i = 1; i < activeIntervals.length; i++) {
+        const last = merged[merged.length - 1];
+        const next = activeIntervals[i];
+        if (next.start <= last.end) {
+          last.end = Math.max(last.end, next.end);
+        } else {
+          merged.push({ ...next });
+        }
+      }
+    }
+
+    const totalMs = merged.reduce((acc, curr) => acc + (curr.end - curr.start), 0);
     const hours = Math.floor(totalMs / (1000 * 60 * 60));
     const minutes = Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60));
 
     return `${hours}h ${minutes}m`;
-  }, [logs]);
+  }, [logs, claims]);
 
   const filteredUsers = users.filter(u =>
     u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -117,14 +192,28 @@ const TimeLogs = () => {
               <div
                 key={u._id}
                 onClick={() => setSelectedUserId(u._id)}
-                className={`flex items-center gap-3 p-3 rounded cursor-pointer ${selectedUserId === u._id ? "bg-primary/10" : "hover:bg-secondary/50"
-                  }`}
+                className={`flex items-center gap-3 p-3 rounded cursor-pointer ${
+                  selectedUserId === u._id
+                    ? "bg-primary/10"
+                    : "hover:bg-secondary/50"
+                }`}
               >
                 <Avatar>
                   <AvatarFallback>{u.name.charAt(0)}</AvatarFallback>
                 </Avatar>
+
                 <div>
-                  <p>{u.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p>{u.name}</p>
+
+                    {/* ✅ UPDATED PART */}
+                    {u.isActive ? (
+                      <div className="w-4 h-4 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.8)]" />
+                    ) : (
+                      <div className="w-4 h-4 bg-red-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
+                    )}
+                  </div>
+
                   <p className="text-xs text-muted-foreground">{u.email}</p>
                 </div>
               </div>
@@ -163,7 +252,6 @@ const TimeLogs = () => {
             </CardHeader>
 
             <CardContent className="flex-1 overflow-hidden">
-
               {!selectedUserId ? (
                 <div className="text-center text-muted-foreground py-10">
                   Select a user
@@ -171,9 +259,7 @@ const TimeLogs = () => {
               ) : loading ? (
                 <div>Loading...</div>
               ) : (
-
                 <div className="overflow-x-auto h-full">
-
                   <div style={{ width: TIMELINE_WIDTH }}>
 
                     {/* Time Ruler */}
@@ -217,16 +303,17 @@ const TimeLogs = () => {
                       {timelineData.map(item => (
                         <div
                           key={item.id}
-                          className={`absolute top-4 h-12 rounded-sm group cursor-pointer ${item.idle
+                          className={`absolute top-4 h-12 rounded-sm group cursor-pointer ${
+                            item.idle
                               ? "bg-red-500/80 hover:bg-red-400"
                               : "bg-green-500/80 hover:bg-green-400"
-                            }`}
+                          }`}
                           style={{
                             left: item.left,
-                            width: item.width
+                            width: item.width,
+                            zIndex: item.zIndex || 10
                           }}
                         >
-                          {/* Hover Tooltip */}
                           <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
                             <div className="px-3 py-1 bg-black text-white text-xs rounded shadow-lg whitespace-nowrap">
                               {item.startStr} - {item.endStr}
@@ -234,7 +321,6 @@ const TimeLogs = () => {
                           </div>
                         </div>
                       ))}
-
                     </div>
 
                   </div>

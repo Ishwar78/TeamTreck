@@ -57,7 +57,7 @@ function generateTokens(payload: any) {
       algorithm: "HS256",
       expiresIn: (env.JWT_ACCESS_EXPIRY || "7d") as any
     }
-  );
+  ); 
 
   const refreshToken = jwt.sign(
     { ...payload, type: "refresh" },
