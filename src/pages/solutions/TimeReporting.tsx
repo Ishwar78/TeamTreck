@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Client from "../client";
-import FAQ from "../faq";
+
 import StartTracking from "../StartTracking";
 
 const fadeUp = {
@@ -162,7 +162,7 @@ const TimeReporting = () => (
 </section>
 
     <Client/>
-    <FAQ />
+    
 
     <StartTracking />
     <Footer />

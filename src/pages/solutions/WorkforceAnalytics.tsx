@@ -11,7 +11,7 @@ import productivity from "@/images/productivity.webp"
 
 import workforceImg from "@/images/workforce1.webp";
 import performanceImg from "@/images/workforce2.webp";
-import FAQ from "../faq";
+
 import StartTracking from "../StartTracking";
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -219,7 +219,7 @@ const WorkforceAnalytics = () => (
   </div>
 </section>
 
-<FAQ />
+
 
 <Client/>
 <StartTracking />

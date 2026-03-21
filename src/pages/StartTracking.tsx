@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
-import trackingImg from "@/images/start-tracking.png"; // 👈 apni image ka naam yaha set kar
+import trackingImg from "@/images/start-tracking.png"; 
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },

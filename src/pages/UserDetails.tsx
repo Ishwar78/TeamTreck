@@ -4,9 +4,8 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ||
-  "https://teamtreck-backend.onrender.com";
+
+ const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 const UserDetails = () => {
   const { id } = useParams();

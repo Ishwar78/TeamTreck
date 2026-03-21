@@ -39,6 +39,7 @@ import TimeTracker from "./pages/features/TimeTracker";
 import TeamManagementFeature from "./pages/features/TeamManagementFeature";
 import ScreenshotMonitoring from "./pages/features/ScreenshotMonitoring";
 import SupportTickets from "./pages/SupportTickets";
+import Groups from "./pages/Groups";
 import UrlTracking from "./pages/features/UrlTracking";
 import WorkforceAnalytics from "./pages/solutions/WorkforceAnalytics";
 import ProductivityAnalytics from "./pages/solutions/ProductivityAnalytics";
@@ -58,6 +59,10 @@ import HelpCenter from "./pages/HelpCenter";
 import ScrollToTop from "./components/ScrollToTop";
 import About from "./pages/About";
 import Terms from "./pages/Terms";
+import ChatPage from "./pages/ChatPage";
+import TaskPage from "./pages/TaskPage";
+   
+
 
 const queryClient = new QueryClient();
 
@@ -124,7 +129,10 @@ const App = () => (
               <Route path="/dashboard/justifications" element={<CompanyAdminAuthGuard><IdleJustification /></CompanyAdminAuthGuard>} />
               <Route path="/dashboard/time-claim" element={<CompanyAdminAuthGuard><TimeClaim /></CompanyAdminAuthGuard>} />
               <Route path="/dashboard/support" element={<CompanyAdminAuthGuard><SupportTickets /></CompanyAdminAuthGuard>} />
-
+              <Route path="/dashboard/groups" element={<CompanyAdminAuthGuard><Groups /></CompanyAdminAuthGuard>} />
+      
+              <Route path="/dashboard/chat" element={<CompanyAdminAuthGuard><ChatPage /></CompanyAdminAuthGuard>} />
+              <Route path="/dashboard/task" element={<CompanyAdminAuthGuard><TaskPage /></CompanyAdminAuthGuard>} />
               {/* Super Admin */}
               <Route path="/super-admin" element={<SuperAdminAuthGuard><SuperAdmin /></SuperAdminAuthGuard>} />
               <Route path="/super-admin/*" element={<SuperAdminAuthGuard><SuperAdmin /></SuperAdminAuthGuard>} />

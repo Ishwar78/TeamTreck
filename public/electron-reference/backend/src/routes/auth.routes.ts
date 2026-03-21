@@ -32,21 +32,7 @@ const refreshSchema = z.object({
   refresh_token: z.string().min(1),
 });
 
-/* ================= TOKEN GENERATION ================= */
 
-// function generateTokens(payload: object) {
-//   const accessToken = jwt.sign(payload, env.JWT_PRIVATE_KEY, {
-//     algorithm: "HS256",
-//     expiresIn: env.JWT_ACCESS_EXPIRY || "7d",
-//   });
-
-//   const refreshToken = jwt.sign(payload, env.JWT_PRIVATE_KEY, {
-//     algorithm: "HS256",
-//     expiresIn: env.JWT_REFRESH_EXPIRY || "30d",
-//   });
-
-//   return { accessToken, refreshToken };
-// }
 
 function generateTokens(payload: any) {
 
@@ -57,7 +43,7 @@ function generateTokens(payload: any) {
       algorithm: "HS256",
       expiresIn: (env.JWT_ACCESS_EXPIRY || "7d") as any
     }
-  ); 
+  );
 
   const refreshToken = jwt.sign(
     { ...payload, type: "refresh" },
@@ -189,37 +175,6 @@ authRoutes.post(
   }
 );
 
-/* ================= REFRESH ================= */
-
-// authRoutes.post(
-//   "/refresh",
-//   validate(refreshSchema),
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       const { refresh_token } = req.body;
-
-//       const decoded: any = jwt.verify(
-//         refresh_token,
-//         env.JWT_PRIVATE_KEY,
-//         { algorithms: ["HS256"] }
-//       );
-
-//       const tokens = generateTokens({
-//         user_id: decoded.user_id,
-//         company_id: decoded.company_id,
-//         role: decoded.role,
-//         device_id: decoded.device_id,
-//       });
-
-//       res.json({
-//         token: tokens.accessToken,
-//         refreshToken: tokens.refreshToken,
-//       });
-//     } catch {
-//       next(new AppError("Invalid refresh token", 401));
-//     }
-//   }
-// );
 
 
 
@@ -284,35 +239,8 @@ authRoutes.post(
   }
 );
 
-/* ================= INVITATIONS ================= */
 
-// authRoutes.get("/invite/:token", async (req: Request, res: Response, next: NextFunction) => {
-//   try {
-//     const { token } = req.params;
-//     const invitation = await Invitation.findOne({ token, status: "pending" }).populate("company_id", "name");
 
-//     if (!invitation) {
-//       throw new AppError("Invalid or expired invitation", 404);
-//     }
-
-//     if (invitation.expiresAt < new Date()) {
-//       invitation.status = "expired";
-//       await invitation.save();
-//       throw new AppError("Invitation has expired", 410);
-//     }
-
-//     res.json({
-//       success: true,
-//       invitation: {
-//         email: invitation.email,
-//         role: invitation.role,
-//         companyName: (invitation.company_id as any).name,
-//       },
-//     });
-//   } catch (err) {
-//     next(err);
-//   }
-// });
 
 
 
@@ -352,51 +280,6 @@ authRoutes.get("/invite/:token", async (req, res, next) => {
   }
 });
 
-
-
-
-
-
-// authRoutes.post("/accept-invite", async (req: Request, res: Response, next: NextFunction) => {
-//   try {
-//     const { token, name, password, phone } = req.body;
-
-//     const invitation = await Invitation.findOne({ token, status: "pending" });
-//     if (!invitation) throw new AppError("Invalid invitation", 404);
-
-//     if (invitation.expiresAt < new Date()) {
-//       invitation.status = "expired";
-//       await invitation.save();
-//       throw new AppError("Invitation has expired", 410);
-//     }
-
-//     // Check if user already exists (extra safety)
-//     const existing = await User.findOne({ email: invitation.email });
-//     if (existing) throw new AppError("User already exists", 400);
-
-//     const hashedPassword = await bcrypt.hash(password, 10);
-
-//     const user = await User.create({
-//       name,
-//       email: invitation.email,
-//       password_hash: hashedPassword,
-//       company_id: invitation.company_id,
-//       role: invitation.role,
-//       status: "active",
-//       phone: phone || "",
-//     });
-
-//     invitation.status = "accepted";
-//     await invitation.save();
-
-//     res.status(201).json({
-//       success: true,
-//       message: "Account activated successfully",
-//     });
-//   } catch (err) {
-//     next(err);
-//   }
-// });
 
 
 
@@ -474,8 +357,8 @@ authRoutes.post("/forgot-password", async (req: Request, res: Response, next: Ne
     user.resetPasswordExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     await user.save();
-    
-    const resetUrl = `${env.FRONTEND_URL || 'https://mbbsgyan.com'}/reset-password?token=${resetToken}`;
+
+    const resetUrl = `${env.FRONTEND_URL || 'http://multiclout.in'}/reset-password?token=${resetToken}`;
 
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">

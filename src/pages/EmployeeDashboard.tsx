@@ -2,18 +2,21 @@ import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, Calendar, CheckCircle, AlertCircle, Timer, Globe, FileText, LayoutDashboard } from "lucide-react";
+import { Clock, Calendar, CheckCircle, AlertCircle, Timer, Globe, FileText, MessageCircle,CheckSquare, LayoutDashboard, Bell } from "lucide-react";
 import { format } from "date-fns";
 import { apiFetch } from "@/lib/api";
 import UserAttendance from "@/components/user/UserAttendance";
 import UserUrls from "@/components/user/UserUrls";
 import UserTimeClaim from "@/components/user/UserTimeClaim";
+import UserTasks from "@/components/user/UserTasks";
+import UserNotifications from "@/components/user/UserNotifications";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const EmployeeDashboard = () => {
     const { user, token } = useAuth();
     const [greeting, setGreeting] = useState("");
     const [stats, setStats] = useState({ workingTime: "00h 00m", idleTime: "00h 00m", status: "Active" });
+    const [unreadNotifications, setUnreadNotifications] = useState(0);
 
     useEffect(() => {
         const hour = new Date().getHours();
@@ -22,7 +25,19 @@ const EmployeeDashboard = () => {
         else setGreeting("Good Evening");
 
         fetchMyStats();
+        fetchUnreadCount();
     }, [token]);
+
+    const fetchUnreadCount = async () => {
+        try {
+            const data = await apiFetch("/api/notifications", token);
+            if (data.success && data.unreadCount !== undefined) {
+                setUnreadNotifications(data.unreadCount);
+            }
+        } catch (err) {
+            console.error("Failed to fetch notifications", err);
+        }
+    };
 
     const fetchMyStats = async () => {
         try {
@@ -71,6 +86,25 @@ const EmployeeDashboard = () => {
                         <TabsTrigger value="attendance" className="gap-2"><Calendar size={16} /> Attendance</TabsTrigger>
                         {/* <TabsTrigger value="url" className="gap-2"><Globe size={16} /> URL Tracking</TabsTrigger> */}
                         <TabsTrigger value="claims" className="gap-2"><FileText size={16} /> Time Claims</TabsTrigger>
+
+{/* Chat Button */}
+    {/* <TabsTrigger value="chat" className="gap-2"><MessageCircle size={16} /> Chat</TabsTrigger> */}
+
+    {/* Task Button */}
+    <TabsTrigger value="task" className="gap-2"><CheckSquare size={16} /> Task</TabsTrigger>
+    
+    {/* Notification Button */}
+    <TabsTrigger value="notifications" className="gap-2 relative">
+        <Bell size={16} /> 
+        Notifications
+        {unreadNotifications > 0 && (
+            <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                {unreadNotifications}
+            </span>
+        )}
+    </TabsTrigger>
+
+
                     </TabsList>
 
                     <TabsContent value="dashboard" className="space-y-6">
@@ -128,7 +162,20 @@ const EmployeeDashboard = () => {
                             </Card>
                         </div>
                     </TabsContent>
+<TabsContent value="chat">
+    <div className="p-4">
+        <h2 className="text-lg font-semibold">Chat Section</h2>
+        <p className="text-muted-foreground">User Chat Section </p>
+    </div>
+</TabsContent>
 
+<TabsContent value="task">
+    <UserTasks />
+</TabsContent>
+
+<TabsContent value="notifications">
+    <UserNotifications onUnreadCountChange={setUnreadNotifications} />
+</TabsContent>
                     <TabsContent value="attendance">
                         <UserAttendance />
                     </TabsContent>

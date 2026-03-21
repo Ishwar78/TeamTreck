@@ -22,7 +22,7 @@ let mouseDistance = 0;
 
 let isPaused = false;
 
-const API_BASE = "https://mbbsgyan.com";
+const API_BASE = "http://multiclout.in";
 
 /* ================= WINDOW ================= */
 

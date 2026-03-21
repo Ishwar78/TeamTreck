@@ -2,10 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import axios from "axios";
 import { useAuth } from "./AuthContext";
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ||
-  "https://teamtreck-backend.onrender.com";
-
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
 const api = axios.create({
   baseURL: `${API_BASE}/api/super-admin`,
 });

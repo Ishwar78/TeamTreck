@@ -12,7 +12,7 @@ import Client from "./client";
 // import FAQ from "./faq";
 
 import timeImg from "@/images/time.png";
-import screenshotImg from "@/images/screenshot.png";
+import screenshotImg from "@/images/Screenshot.png";
 import reportImg from "@/images/report.png";
 import urlImg from "@/images/url.png";
 import StartTracking from "./StartTracking";

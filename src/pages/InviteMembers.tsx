@@ -14,8 +14,8 @@ import { apiFetch } from "@/lib/api";
 
 const roles = [
   { value: "employee", label: "Employee", desc: "Desktop tracking only" },
-  { value: "sub_admin", label: "Sub-Admin", desc: "View reports & screenshots" },
-  { value: "company_admin", label: "Admin", desc: "Full company control" },
+  // { value: "sub_admin", label: "Sub-Admin", desc: "View reports & screenshots" },
+  // { value: "company_admin", label: "Admin", desc: "Full company control" },
 ];
 
 

@@ -35,9 +35,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ||
-  "https://teamtreck-backend.onrender.com";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://multiclout.in";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);

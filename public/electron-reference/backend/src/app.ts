@@ -18,8 +18,13 @@ import { publicRoutes } from "./routes/public.routes";
 import { paymentRoutes } from "./routes/payment.routes";
 import { claimRoutes } from "./routes/claim.routes";
 import { reportRoutes } from "./routes/reports.routes";
+import { taskRoutes } from "./routes/task.routes";
+import { notificationRoutes } from "./routes/notification.routes";
 
 const app = express();
+
+
+app.set("trust proxy", 1);
 
 /* ================= SECURITY ================= */
 app.use(helmet({
@@ -35,7 +40,9 @@ const allowedOrigins = [
   "http://localhost:8081",
   "http://localhost:8082",
   "http://localhost:3005",
-   "https://mbbsgyan.com",
+ "https://multiclout.in",
+"https://www.multiclout.in",
+   "http://multiclout.in",
   "https://www.mbbsgyan.com",
   ...(env.CORS_ORIGIN ? env.CORS_ORIGIN.split(",").map((o) => o.trim()) : [])
 ];
@@ -90,6 +97,8 @@ app.use("/api/public", publicRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/claims", claimRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/tasks", taskRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 /* ================= ERROR HANDLER ================= */
 app.use(errorHandler);

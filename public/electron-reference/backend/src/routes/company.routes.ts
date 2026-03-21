@@ -256,8 +256,43 @@ router.post('/tickets/:id/reply', authenticate, requireRole('company_admin'), as
   } catch (err) { next(err); }
 });
 
+/* ================= GROUPS ================= */
+
+import { Group } from '../models/Group';
+
+router.get('/groups', authenticate, requireRole('company_admin', 'sub_admin'), async (req, res, next) => {
+  try {
+    // Populate users if frontend ever needs more details, but frontend handles length via users.length
+    const groups = await Group.find({ company_id: req.auth!.company_id }).populate('users', 'name email').lean();
+    res.json({ success: true, groups });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/groups', authenticate, requireRole('company_admin'), async (req, res, next) => {
+  try {
+    const { name, userIds } = req.body;
+    if (!name) throw new AppError('Group name is required', 400);
+
+    const existingGroup = await Group.findOne({ name, company_id: req.auth!.company_id });
+    if (existingGroup) throw new AppError('Group name already exists', 400);
+
+    const group = await Group.create({
+      name,
+      company_id: req.auth!.company_id,
+      users: userIds || []
+    });
+
+    res.status(201).json({ success: true, group });
+  } catch (err) {
+    next(err);
+  }
+});
+
 /* ================= SEND NOTIFICATIONS ================= */
 import { sendEmail } from '../utils/mailer';
+import { Notification } from '../models/Notification';
 
 router.post('/notifications/send', authenticate, requireRole('company_admin'), async (req: any, res, next) => {
   try {
@@ -279,13 +314,30 @@ router.post('/notifications/send', authenticate, requireRole('company_admin'), a
     });
 
     let sentCount = 0;
+    const notificationsToInsert = [];
+
     for (const user of users) {
       if (user.email) {
         const emailSubject = subject || `Notification from ${company.name} Admin`;
         const emailHtml = `<p>Hello ${user.name},</p><p>${message.replace(/\n/g, '<br>')}</p>`;
+        
         const success = await sendEmail(user.email, emailSubject, emailHtml);
-        if (success) sentCount++;
+        if (success) {
+          sentCount++;
+          // prepare notification document
+          notificationsToInsert.push({
+            company_id: req.auth!.company_id,
+            user_id: user._id,
+            title: emailSubject,
+            message: message,
+            is_read: false
+          });
+        }
       }
+    }
+
+    if (notificationsToInsert.length > 0) {
+      await Notification.insertMany(notificationsToInsert);
     }
 
     res.json({ success: true, message: `Successfully sent ${sentCount} notifications`, sentCount });

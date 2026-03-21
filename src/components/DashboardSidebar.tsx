@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard, Users, Clock, Camera, Globe, BarChart3,
+  LayoutDashboard, Users, UsersRound, Clock, Camera, Globe, BarChart3,
   Settings, CreditCard, LogOut, ChevronLeft, UserPlus, Building2,
-  Activity, FileText, Bell, ShieldBan, Timer, CalendarCheck, PlayCircle, LifeBuoy
+  Activity, FileText, Bell, ShieldBan, Timer, CalendarCheck, PlayCircle, LifeBuoy, MessageCircle, CheckSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell, NotificationDropdown, useNotifications } from "@/components/NotificationCenter";
@@ -23,6 +23,7 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", permission: "view_dashboard" },
   { icon: Users, label: "Team", path: "/dashboard/team", permission: "view_team" },
+  { icon: UsersRound, label: "Groups", path: "/dashboard/groups", permission: "manage_team" },
   { icon: Clock, label: "Time Logs", path: "/dashboard/time", permission: "view_time_logs" },
   { icon: Camera, label: "Screenshots", path: "/dashboard/screenshots", permission: "view_screenshots" },
   { icon: Globe, label: "App & URL Usage", path: "/dashboard/usage", permission: "view_app_usage" },
@@ -36,6 +37,12 @@ const menuItems: MenuItem[] = [
   { icon: FileText, label: "Time Claims", path: "/dashboard/time-claim", permission: "manage_team" },
   { icon: CalendarCheck, label: "Attendance", path: "/dashboard/attendance", permission: "view_attendance" },
   // { icon: PlayCircle, label: "Sessions", path: "/dashboard/sessions", permission: "view_sessions" },
+
+  // ✅ Chat
+// { icon: MessageCircle, label: "Chat", path: "/dashboard/chat", permission: "view_team" },
+// ✅ Task
+{ icon: CheckSquare, label: "Tasks", path: "/dashboard/task", permission: "view_dashboard" },
+
   { icon: CreditCard, label: "Billing", path: "/dashboard/billing", permission: "manage_billing" },
   { icon: Settings, label: "Settings", path: "/dashboard/settings", permission: "manage_settings" },
   { icon: LifeBuoy, label: "Support Tickets", path: "/dashboard/support", permission: "manage_settings" },

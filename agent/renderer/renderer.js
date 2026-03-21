@@ -1,4 +1,4 @@
-const API_BASE = "https://mbbsgyan.com";
+const API_BASE = "http://multiclout.in";
 
 let token = localStorage.getItem("auth_token");
 let deviceId = localStorage.getItem("device_id");

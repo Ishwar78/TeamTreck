@@ -1,9 +1,7 @@
 
-
-
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL ||
-  "https://mbbsgyan.com";
+  "http://multiclout.in";
 
 export const apiFetch = async (
   url: string,
