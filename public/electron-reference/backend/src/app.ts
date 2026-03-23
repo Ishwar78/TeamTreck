@@ -20,6 +20,7 @@ import { claimRoutes } from "./routes/claim.routes";
 import { reportRoutes } from "./routes/reports.routes";
 import { taskRoutes } from "./routes/task.routes";
 import { notificationRoutes } from "./routes/notification.routes";
+import {chatRoutes } from "./routes/chat.routes";
 
 const app = express();
 
@@ -43,7 +44,7 @@ const allowedOrigins = [
  "https://multiclout.in",
 "https://www.multiclout.in",
    "http://multiclout.in",
-  "https://www.mbbsgyan.com",
+  
   ...(env.CORS_ORIGIN ? env.CORS_ORIGIN.split(",").map((o) => o.trim()) : [])
 ];
 
@@ -99,7 +100,7 @@ app.use("/api/claims", claimRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/notifications", notificationRoutes);
-
+app.use("/api/chat",chatRoutes);
 /* ================= ERROR HANDLER ================= */
 app.use(errorHandler);
 

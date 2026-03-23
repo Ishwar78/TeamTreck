@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, Calendar, CheckCircle, AlertCircle, Timer, Globe, FileText, MessageCircle,CheckSquare, LayoutDashboard, Bell } from "lucide-react";
+import { Clock, Calendar, CheckCircle, AlertCircle, Timer, Globe, FileText, MessageCircle,CheckSquare, LayoutDashboard, Bell, UsersRound } from "lucide-react";
 import { format } from "date-fns";
 import { apiFetch } from "@/lib/api";
 import UserAttendance from "@/components/user/UserAttendance";
@@ -10,8 +10,9 @@ import UserUrls from "@/components/user/UserUrls";
 import UserTimeClaim from "@/components/user/UserTimeClaim";
 import UserTasks from "@/components/user/UserTasks";
 import UserNotifications from "@/components/user/UserNotifications";
+import UserGroups from "@/components/user/UserGroups";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
+import ChatPage from "@/pages/ChatPage";
 const EmployeeDashboard = () => {
     const { user, token } = useAuth();
     const [greeting, setGreeting] = useState("");
@@ -88,10 +89,13 @@ const EmployeeDashboard = () => {
                         <TabsTrigger value="claims" className="gap-2"><FileText size={16} /> Time Claims</TabsTrigger>
 
 {/* Chat Button */}
-    {/* <TabsTrigger value="chat" className="gap-2"><MessageCircle size={16} /> Chat</TabsTrigger> */}
+     <TabsTrigger value="chat" className="gap-2"><MessageCircle size={16} /> Chat</TabsTrigger> 
 
     {/* Task Button */}
     <TabsTrigger value="task" className="gap-2"><CheckSquare size={16} /> Task</TabsTrigger>
+
+    {/* Groups Button */}
+    <TabsTrigger value="groups" className="gap-2"><UsersRound size={16} /> Groups</TabsTrigger>
     
     {/* Notification Button */}
     <TabsTrigger value="notifications" className="gap-2 relative">
@@ -162,15 +166,16 @@ const EmployeeDashboard = () => {
                             </Card>
                         </div>
                     </TabsContent>
-<TabsContent value="chat">
-    <div className="p-4">
-        <h2 className="text-lg font-semibold">Chat Section</h2>
-        <p className="text-muted-foreground">User Chat Section </p>
-    </div>
+<TabsContent value="chat" className="h-[80vh]">
+    <ChatPage />
 </TabsContent>
 
 <TabsContent value="task">
     <UserTasks />
+</TabsContent>
+
+<TabsContent value="groups">
+    <UserGroups />
 </TabsContent>
 
 <TabsContent value="notifications">

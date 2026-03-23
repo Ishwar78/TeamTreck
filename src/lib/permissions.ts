@@ -25,7 +25,8 @@ export type Permission =
   | "platform_manage_companies"
   | "platform_manage_plans"
   | "platform_manage_subscriptions"
-  | "platform_view_analytics";
+  | "platform_view_analytics"
+  | "manage_roles";
 
 // ─── Permission Matrix ───
 const PERMISSION_MATRIX: Record<AppRole, Set<Permission>> = {
@@ -55,6 +56,7 @@ const PERMISSION_MATRIX: Record<AppRole, Set<Permission>> = {
     "export_reports",
     "view_attendance",
     "view_sessions",
+     "manage_roles",
   ]),
   sub_admin: new Set([
     "view_dashboard",

@@ -105,6 +105,27 @@ router.get(
   }
 );
 
+/* ================= MEMBERS MANAGEMENT ================= */
+
+router.put('/users/:id/hours', authenticate, requireRole('company_admin'), async (req, res, next) => {
+  try {
+    const { workingHours } = req.body;
+    if (!workingHours) throw new AppError('Working hours string is required', 400);
+
+    const userToUpdate = await User.findOneAndUpdate(
+      { _id: req.params.id, company_id: req.auth!.company_id },
+      { workingHours },
+      { new: true }
+    );
+
+    if (!userToUpdate) throw new AppError('User not found', 404);
+
+    res.json({ success: true, user: userToUpdate });
+  } catch (err) {
+    next(err);
+  }
+});
+
 /* ================= DETAILS ================= */
 
 router.get(
@@ -145,7 +166,7 @@ router.post(
   requireRole('company_admin'),
   async (req, res, next) => {
     try {
-      const { email, role } = req.body;
+      const { email, role, workingHours } = req.body;
 
       if (!email || !role) {
         throw new AppError('Email and role are required', 400);
@@ -181,6 +202,7 @@ router.post(
         email: email.toLowerCase(),
         company_id: company._id,
         role,
+        workingHours: workingHours ? String(workingHours) : "9:00 AM to 6:00 PM",
         token,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
       });
@@ -189,7 +211,7 @@ router.post(
       try {
         console.log(`Sending invite email to ${email} with token ${token} for company ${company.name}`);
         const { sendInvitationEmail } = await import('../services/mail.service');
-        await sendInvitationEmail(email, token, company.name);
+        await sendInvitationEmail(email, token, company.name, workingHours ? String(workingHours) : "9:00 AM to 6:00 PM");
         console.log('Invite email sent successfully');
       } catch (emailErr) {
         console.error('Failed to send invite email:', emailErr);
@@ -198,6 +220,49 @@ router.post(
       }
 
       res.status(201).json({ success: true, invitation });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.post(
+  '/invites/message',
+  authenticate,
+  requireRole('company_admin'),
+  async (req, res, next) => {
+    try {
+      const { tokens, message } = req.body;
+      if (!tokens || !Array.isArray(tokens) || tokens.length === 0) {
+        throw new AppError('No users selected', 400);
+      }
+      if (!message) {
+        throw new AppError('Message is required', 400);
+      }
+
+      const company = await Company.findById(req.auth!.company_id);
+      if (!company) throw new AppError('Company not found', 404);
+
+      const invitations = await Invitation.find({
+        token: { $in: tokens },
+        company_id: req.auth!.company_id,
+        status: 'pending'
+      });
+
+      const { sendEmail } = await import('../utils/mailer');
+      let sentCount = 0;
+
+      for (const inv of invitations) {
+        const emailSubject = `Message from ${company.name}`;
+        const emailHtml = `<p>Hello,</p><p>${message.replace(/\n/g, '<br>')}</p>`;
+        
+        const success = await sendEmail(inv.email, emailSubject, emailHtml);
+        if (success) {
+          sentCount++;
+        }
+      }
+
+      res.json({ success: true, message: `Successfully sent ${sentCount} messages` });
     } catch (err) {
       next(err);
     }
@@ -260,6 +325,18 @@ router.post('/tickets/:id/reply', authenticate, requireRole('company_admin'), as
 
 import { Group } from '../models/Group';
 
+router.get('/my-groups', authenticate, async (req, res, next) => {
+  try {
+    const groups = await Group.find({
+      company_id: req.auth!.company_id,
+      users: req.auth!.user_id
+    }).populate('users', 'name email').lean();
+    res.json({ success: true, groups });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/groups', authenticate, requireRole('company_admin', 'sub_admin'), async (req, res, next) => {
   try {
     // Populate users if frontend ever needs more details, but frontend handles length via users.length
@@ -285,6 +362,36 @@ router.post('/groups', authenticate, requireRole('company_admin'), async (req, r
     });
 
     res.status(201).json({ success: true, group });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put('/groups/:id', authenticate, requireRole('company_admin'), async (req, res, next) => {
+  try {
+    const { name, userIds } = req.body;
+    if (!name) throw new AppError('Group name is required', 400);
+
+    const group = await Group.findOneAndUpdate(
+      { _id: req.params.id, company_id: req.auth!.company_id },
+      { name, users: userIds || [] },
+      { new: true }
+    );
+
+    if (!group) throw new AppError('Group not found', 404);
+
+    res.json({ success: true, group });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/groups/:id', authenticate, requireRole('company_admin'), async (req, res, next) => {
+  try {
+    const group = await Group.findOneAndDelete({ _id: req.params.id, company_id: req.auth!.company_id });
+    if (!group) throw new AppError('Group not found', 404);
+
+    res.json({ success: true, message: 'Group deleted successfully' });
   } catch (err) {
     next(err);
   }

@@ -103,7 +103,7 @@ const ScreenshotMonitoring = () => (
         custom={0}
         className="text-3xl md:text-4xl font-bold text-foreground"
       >
-        Why WebmokTeamTrack’s <span className="text-gradient">Screenshot Feature</span>
+        Why MULTICLOUTTeamTrex’s <span className="text-gradient">Screenshot Feature</span>
       </motion.h2>
     </motion.div>
 

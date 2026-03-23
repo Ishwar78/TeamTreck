@@ -251,7 +251,7 @@ const FeatureTabs = () => {
 
     {/* Heading */}
     <h2 className="text-4xl md:text-5xl font-bold text-center mb-16">
-      Why Teams Love <span className="text-primary">WebMokTeamTrack?</span>
+      Why Teams Love <span className="text-primary">MULTICLOUTTeamTrex?</span>
     </h2>
 
     {/* Card Container */}
@@ -305,7 +305,7 @@ const FeatureTabs = () => {
       {/* LEFT CONTENT */}
       <div>
         <h2 className="text-4xl md:text-5xl font-bold mb-6">
-          Who Can Use <span className="text-gradient">WebMokTeamTrack</span>
+          Who Can Use <span className="text-gradient">MULTICLOUTTeamTrack</span>
         </h2>
 
         <p className="text-white/80 mb-10 max-w-xl">

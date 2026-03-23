@@ -11,7 +11,7 @@ const IDLE_LIMIT = 3 * 60 * 1000;
 
 /* ================= NEW ACTIVITY TRACKING ================= */
 
-let keyboardEvents = 0;
+let keyboardEvents = 0; 
 let mouseEvents = 0;
 let mouseDistance = 0;
 

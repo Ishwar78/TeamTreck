@@ -25,6 +25,7 @@ const ScreenshotSchema = new Schema<IScreenshot>(
   { timestamps: true }
 );
 
+
 export const Screenshot = mongoose.model<IScreenshot>(
   'Screenshot',
   ScreenshotSchema

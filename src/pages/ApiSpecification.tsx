@@ -92,7 +92,7 @@ const sections: Section[] = [
   "status": "active",
   "active_window": {
     "app_name": "VS Code",
-    "window_title": "main.tsx — WEBMOK",
+    "window_title": "main.tsx —MULTICLOUT ",
     "url": null
   }
 }`,
@@ -130,7 +130,7 @@ const sections: Section[] = [
   file: <binary PNG/JPEG, max 2MB>
   timestamp: "2026-02-09T14:35:12Z"
   app_name: "VS Code"
-  window_title: "main.tsx — WEBMOK"
+  window_title: "main.tsx — MULTICLOUT"
   url: null (optional, for browsers)
   blurred: false`,
         response: `{
@@ -172,7 +172,7 @@ const sections: Section[] = [
   "entries": [
     {
       "app_name": "VS Code",
-      "window_title": "main.tsx — WEBMOK",
+      "window_title": "main.tsx — MULTICLOUT",
       "started_at": "2026-02-09T14:00:00Z",
       "ended_at": "2026-02-09T14:04:30Z",
       "duration_seconds": 270
@@ -461,7 +461,7 @@ const ApiSpecification = () => {
             <FileText size={22} className="text-primary" /> Desktop Agent API Specification
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Complete API reference for the WEBMOK desktop tracking agent (Electron / Tauri).
+            Complete API reference for the MULTICLOUT desktop tracking agent (Electron / Tauri).
           </p>
         </div>
 

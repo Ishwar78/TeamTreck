@@ -39,9 +39,11 @@ const menuItems: MenuItem[] = [
   // { icon: PlayCircle, label: "Sessions", path: "/dashboard/sessions", permission: "view_sessions" },
 
   // ✅ Chat
-// { icon: MessageCircle, label: "Chat", path: "/dashboard/chat", permission: "view_team" },
+ { icon: MessageCircle, label: "Chat", path: "/dashboard/chat", permission: "view_team" },
 // ✅ Task
 { icon: CheckSquare, label: "Tasks", path: "/dashboard/task", permission: "view_dashboard" },
+
+{ icon: ShieldBan, label: "Role Management", path: "/dashboard/roles", permission: "manage_roles" },
 
   { icon: CreditCard, label: "Billing", path: "/dashboard/billing", permission: "manage_billing" },
   { icon: Settings, label: "Settings", path: "/dashboard/settings", permission: "manage_settings" },
@@ -70,7 +72,7 @@ const DashboardSidebar = ({ onCloseMobile }: DashboardSidebarProps) => {
         {!collapsed && (
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center font-bold text-primary-foreground text-xs">W</div>
-            <span className="font-bold text-foreground text-sm">WEBMOK</span>
+            <span className="font-bold text-foreground text-sm">MULTICLOUT</span>
           </div>
         )}
         <button onClick={() => setCollapsed(!collapsed)} className="text-muted-foreground hover:text-foreground">

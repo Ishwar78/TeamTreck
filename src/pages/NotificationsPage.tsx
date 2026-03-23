@@ -24,6 +24,7 @@ const NotificationsPage = () => {
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (token) fetchMembers();
@@ -51,11 +52,19 @@ const NotificationsPage = () => {
     );
   };
 
+  const filteredMembers = members.filter((m: any) => 
+    m.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    m.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const toggleSelectAll = () => {
-    if (selectedUserIds.length === members.length) {
-      setSelectedUserIds([]); // Deselect all
+    const filteredIds = filteredMembers.map(m => m._id);
+    const allFilteredSelected = filteredIds.every(id => selectedUserIds.includes(id)) && filteredIds.length > 0;
+    
+    if (allFilteredSelected) {
+      setSelectedUserIds(prev => prev.filter(id => !filteredIds.includes(id)));
     } else {
-      setSelectedUserIds(members.map(m => m._id)); // Select all
+      setSelectedUserIds(prev => Array.from(new Set([...prev, ...filteredIds])));
     }
   };
 
@@ -174,23 +183,31 @@ const NotificationsPage = () => {
 
           {/* User List Section */}
           <Card className="lg:col-span-2 overflow-hidden border-border bg-card">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Users size={18} /> Select Recipients
               </CardTitle>
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="select-all" 
-                  checked={selectedUserIds.length === members.length && members.length > 0}
-                  onCheckedChange={toggleSelectAll}
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                <Input 
+                  placeholder="Search users..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full sm:w-64 h-9"
                 />
-                <Label htmlFor="select-all" className="cursor-pointer font-medium text-sm">Select All</Label>
+                <div className="flex items-center space-x-2 whitespace-nowrap">
+                  <Checkbox 
+                    id="select-all" 
+                    checked={filteredMembers.length > 0 && filteredMembers.every(m => selectedUserIds.includes(m._id))}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                  <Label htmlFor="select-all" className="cursor-pointer font-medium text-sm">Select All</Label>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-0 overflow-x-auto max-h-[500px] overflow-y-auto">
-              {members.length === 0 ? (
+              {filteredMembers.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground">
-                  No employees found. Please add team members first.
+                  No employees found matching your search.
                 </div>
               ) : (
                 <Table className="min-w-[500px]">
@@ -203,7 +220,7 @@ const NotificationsPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {members.map((member) => (
+                    {filteredMembers.map((member) => (
                       <TableRow 
                         key={member._id} 
                         className="cursor-pointer"

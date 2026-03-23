@@ -25,7 +25,8 @@ const transporter = nodemailer.createTransport({
 export const sendInvitationEmail = async (
   email: string,
   inviteToken: string,
-  companyName: string
+  companyName: string,
+  workingHours?: string
 ) => {
 
 
@@ -78,6 +79,10 @@ export const sendInvitationEmail = async (
                       to join <strong>${companyName}</strong>. 
                       This invitation grants you access to our platform where you can 
                       collaborate, manage tasks, and be part of our growing organization.
+                    </p>
+
+                    <p style="color:#4b5563;font-size:15px;line-height:1.6;">
+                      <strong>Your assigned working hours are: ${workingHours || "9:00 AM to 6:00 PM"}.</strong>
                     </p>
 
                     <p style="color:#4b5563;font-size:15px;line-height:1.6;">
@@ -162,9 +167,9 @@ export const sendCompanyCreatedEmail = async (
     console.log("Sending company creation email to:", email);
 
     const info = await transporter.sendMail({
-      from: `"Webmok Support" <${env.SMTP_USER}>`,
+      from: `"MULTICLOUT Support" <${env.SMTP_USER}>`,
       to: email,
-      subject: `Welcome to Webmok - Your Company Account has been created`,
+      subject: `Welcome to MULTICLOUT - Your Company Account has been created`,
       html: `
       <!DOCTYPE html>
       <html>

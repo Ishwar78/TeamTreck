@@ -62,7 +62,7 @@ const About = () => {
             custom={1}
             className="text-lg text-white/80"
           >
-            TeamTreck by Webmok is a powerful employee productivity and time
+            TeamTrex by MULTICLOUT is a powerful employee productivity and time
             tracking platform designed to help organizations manage remote and
             in-office teams efficiently. Our platform provides real-time
             insights, smart analytics, and automated tracking tools to improve

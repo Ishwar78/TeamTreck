@@ -28,7 +28,7 @@ const mockScreenshots: Screenshot[] = Array.from({ length: 24 }, (_, i) => ({
   user: ["Alice Johnson", "Bob Smith", "Carol White", "David Lee", "Eva Brown", "Frank Chen"][i % 6],
   time: `${9 + Math.floor(i / 3)}:${String((i % 3) * 20).padStart(2, "0")}`,
   app: ["VS Code", "Chrome", "Slack", "Figma", "Terminal", "Notion"][i % 6],
-  title: ["main.tsx — WEBMOK", "Dashboard - Google", "#team-chat", "UI Design v3", "npm run dev", "Sprint Planning"][i % 6],
+  title: ["main.tsx — MULTICLOUT", "Dashboard - Google", "#team-chat", "UI Design v3", "npm run dev", "Sprint Planning"][i % 6],
   gradient: gradients[i % 6],
 }));
 

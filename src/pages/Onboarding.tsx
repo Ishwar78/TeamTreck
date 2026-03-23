@@ -486,7 +486,7 @@ const Onboarding = () => {
 
   // const handleComplete = () => {
   //   toast({
-  //     title: "Welcome to WEBMOK!",
+  //     title: "Welcome to MULTICLOUT!",
   //     description: `${companyData.name} is ready. Redirecting to your dashboard...`,
   //   });
   //   setTimeout(() => navigate("/dashboard"), 1500);

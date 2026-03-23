@@ -324,6 +324,7 @@ authRoutes.post(
         password_hash: hashedPassword,
         company_id: invitation.company_id,
         role: invitation.role,
+        workingHours: invitation.workingHours || "9:00 AM to 6:00 PM",
         status: "active",
         phone: phone || "",
       });

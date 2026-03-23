@@ -18,7 +18,7 @@ const mockEvents: FeedEvent[] = [
   { id: 5, type: "login", user: "Eva Brown", message: "Logged in from desktop agent", time: "5m ago" },
   { id: 6, type: "screenshot", user: "Frank Chen", message: "Screenshot captured", time: "5m ago", meta: "Terminal — npm run dev" },
   { id: 7, type: "alert", user: "Carol White", message: "Idle exceeded threshold (15 min)", time: "8m ago" },
-  { id: 8, type: "app_switch", user: "Alice Johnson", message: "Switched to Chrome", time: "10m ago", meta: "WEBMOK Dashboard" },
+  { id: 8, type: "app_switch", user: "Alice Johnson", message: "Switched to Chrome", time: "10m ago", meta: "MULTICLOUT Dashboard" },
   { id: 9, type: "url_visit", user: "Bob Smith", message: "Visited dribbble.com", time: "12m ago", meta: "Inspiration board" },
   { id: 10, type: "login", user: "David Lee", message: "Logged in from desktop agent", time: "15m ago" },
 ];

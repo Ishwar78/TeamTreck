@@ -54,7 +54,7 @@ const TimeTracker = () => (
 
           <motion.p variants={fadeUp} custom={2} className="text-lg text-muted-foreground">
             Track every second of work automatically. No manual timers, no forgetting to clock in.
-            WEBMOK's desktop agent handles it all silently in the background.
+            MULTICLOUT's desktop agent handles it all silently in the background.
           </motion.p>
 
           <motion.div variants={fadeUp} custom={3} className="flex gap-3 justify-center mt-8">

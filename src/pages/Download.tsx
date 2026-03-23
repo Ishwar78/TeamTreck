@@ -24,7 +24,7 @@ const fadeUp = {
   }),
 };
 
-// const DOWNLOAD_BASE = "https://releases.webmok.com/agent";
+// const DOWNLOAD_BASE = "https://releases.MULTICLOUT.com/agent";
 const DOWNLOAD_BASE = "/downloads";
 
 
@@ -56,8 +56,8 @@ const platforms = [
     version: "v1.0.0",
     size: "95 MB",
     ext: ".dmg",
-    file: "WorkWiseAgent-1.0.0-x64-mac.dmg",
-    downloadUrl: `${DOWNLOAD_BASE}/WorkWiseAgent-1.0.0-x64-mac.dmg`,
+   file: "TeamTrexAgent-1.0.0-x64-mac.dmg",
+downloadUrl: `${DOWNLOAD_BASE}/TeamTrexAgent-1.0.0-x64-mac.dmg`,
     minOs: "macOS 10.15+ (Intel)",
     steps: [
       "Open downloaded DMG",
@@ -74,8 +74,8 @@ const platforms = [
     version: "v1.0.0",
     size: "98 MB",
     ext: ".dmg",
-    file: "WorkWiseAgent-1.0.0-arm64-mac.dmg",
-    downloadUrl: `${DOWNLOAD_BASE}/WorkWiseAgent-1.0.0-arm64-mac.dmg`,
+  file: "TeamTrexAgent-1.0.0-arm64-mac.dmg",
+downloadUrl: `${DOWNLOAD_BASE}/TeamTrexAgent-1.0.0-arm64-mac.dmg`,
     minOs: "macOS 11+ (M1 / M2 / M3)",
     steps: [
       "Open downloaded DMG",
@@ -146,7 +146,7 @@ const DownloadPage = () => {
         <div className="container mx-auto px-4">
           <motion.div initial="hidden" animate="visible" className="text-center mb-14">
             <motion.h1 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-bold mb-4">
-              Download <span className="text-gradient">WEBMOK Agent</span>
+              Download <span className="text-gradient">MULTICLOUT Agent</span>
             </motion.h1>
             <motion.p variants={fadeUp} custom={1} className="text-muted-foreground max-w-xl mx-auto">
               One universal installer for all companies. Your login credentials automatically configure company-specific rules and plan settings.

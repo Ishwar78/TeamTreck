@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/DashboardLayout";
 import { PageGuard } from "@/components/RoleGuard";
@@ -23,9 +24,14 @@ const InviteMembers = () => {
   const { token, user } = useAuth();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("user");
+  const [workingHours, setWorkingHours] = useState("9:00 AM to 6:00 PM");
   const [invites, setInvites] = useState<any[]>([]);
   const [planLimits, setPlanLimits] = useState({ name: "...", maxUsers: 0, currentUsers: 0 });
   const [loading, setLoading] = useState(false);
+
+  const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
+  const [bulkMessage, setBulkMessage] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -69,7 +75,7 @@ const InviteMembers = () => {
     try {
       await apiFetch("/api/company/invites", token, {
         method: "POST",
-        body: JSON.stringify({ email, role }),
+        body: JSON.stringify({ email, role, workingHours: workingHours.trim() }),
       });
 
       toast({ title: "Invite sent!", description: `Invitation sent to ${email}` });
@@ -83,6 +89,39 @@ const InviteMembers = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    const pendingInvites = invites.filter(i => i.status === "pending");
+    if (selectedTokens.length === pendingInvites.length) {
+      setSelectedTokens([]);
+    } else {
+      setSelectedTokens(pendingInvites.map(i => i.token));
+    }
+  };
+
+  const toggleSelect = (token: string) => {
+    setSelectedTokens(prev => 
+      prev.includes(token) ? prev.filter(t => t !== token) : [...prev, token]
+    );
+  };
+
+  const handleSendBulkMessage = async () => {
+    if (!bulkMessage.trim() || selectedTokens.length === 0) return;
+    setSendingMessage(true);
+    try {
+      await apiFetch("/api/company/invites/message", token, {
+        method: "POST",
+        body: JSON.stringify({ tokens: selectedTokens, message: bulkMessage }),
+      });
+      toast({ title: "Success", description: "Messages sent to selected members" });
+      setSelectedTokens([]);
+      setBulkMessage("");
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to send messages", variant: "destructive" });
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -146,6 +185,17 @@ const InviteMembers = () => {
                   />
                 </div>
               </div>
+              <div className="w-full sm:w-40">
+                <Label className="text-xs">Working Hours</Label>
+                <div className="mt-1.5">
+                  <Input
+                    type="text"
+                    placeholder="e.g. 9:00 AM to 6:00 PM"
+                    value={workingHours}
+                    onChange={(e) => setWorkingHours(e.target.value)}
+                  />
+                </div>
+              </div>
               <div className="w-full sm:w-48">
                 <Label className="text-xs">Role</Label>
                 <Select value={role} onValueChange={setRole}>
@@ -182,19 +232,50 @@ const InviteMembers = () => {
             transition={{ delay: 0.2 }}
             className="rounded-xl bg-gradient-card border border-border"
           >
-            <div className="p-4 border-b border-border">
-              <h2 className="font-semibold text-foreground text-sm">Pending Invitations ({invites.length})</h2>
+            <div className="p-4 border-b border-border flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Checkbox 
+                  checked={invites.filter(i => i.status === "pending").length > 0 && selectedTokens.length === invites.filter(i => i.status === "pending").length} 
+                  onCheckedChange={toggleSelectAll} 
+                />
+                <h2 className="font-semibold text-foreground text-sm">Pending Invitations ({invites.length})</h2>
+              </div>
             </div>
+
+            {selectedTokens.length > 0 && (
+              <div className="p-4 bg-secondary/10 border-b border-border space-y-3">
+                <Label className="text-xs">Send Message to Selected ({selectedTokens.length})</Label>
+                <textarea 
+                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  rows={2}
+                  placeholder="Type your message here..."
+                  value={bulkMessage}
+                  onChange={e => setBulkMessage(e.target.value)}
+                />
+                <Button size="sm" onClick={handleSendBulkMessage} disabled={sendingMessage || !bulkMessage.trim()}>
+                  {sendingMessage ? "Sending..." : "Send Message"}
+                </Button>
+              </div>
+            )}
+
             <div className="divide-y divide-border">
               {invites.map((inv) => (
                 <div key={inv.token} className="flex items-center gap-4 p-4 hover:bg-secondary/20 transition-colors">
+                  {inv.status === "pending" ? (
+                    <Checkbox 
+                      checked={selectedTokens.includes(inv.token)} 
+                      onCheckedChange={() => toggleSelect(inv.token)} 
+                    />
+                  ) : (
+                    <div className="w-4" />
+                  )}
                   <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-medium text-foreground">
                     {inv.email[0].toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-foreground truncate">{inv.email}</div>
                     <div className="text-xs text-muted-foreground capitalize">
-                      {inv.role.replace("_", "-")} • Sent {inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : 'N/A'}
+                      {inv.role.replace("_", "-")} • {inv.workingHours || "9:00 AM to 6:00 PM"} • Sent {inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : 'N/A'}
                     </div>
                   </div>
                   <Badge variant={inv.status === "pending" ? "default" : "destructive"} className="text-[10px]">

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UsersRound, Plus, Users } from "lucide-react";
+import { UsersRound, Plus, Users, Search, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -25,6 +25,17 @@ const Groups = () => {
 
   const [addDialog, setAddDialog] = useState(false);
   const [newGroup, setNewGroup] = useState({
+    name: "",
+    userIds: [] as string[],
+  });
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [memberSearchQuery, setMemberSearchQuery] = useState("");
+  const [editMemberSearchQuery, setEditMemberSearchQuery] = useState("");
+  
+  const [editDialog, setEditDialog] = useState(false);
+  const [editGroupState, setEditGroupState] = useState({
+    _id: "",
     name: "",
     userIds: [] as string[],
   });
@@ -103,6 +114,88 @@ const Groups = () => {
     });
   };
 
+  const toggleUserSelectionEdit = (userId: string) => {
+    setEditGroupState(prev => {
+      const selected = prev.userIds.includes(userId);
+      if (selected) {
+        return { ...prev, userIds: prev.userIds.filter(id => id !== userId) };
+      } else {
+        return { ...prev, userIds: [...prev.userIds, userId] };
+      }
+    });
+  };
+
+  const openEditGroup = (group: any, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    setEditGroupState({
+      _id: group._id,
+      name: group.name,
+      userIds: group.users ? group.users.map((u: any) => u._id) : (group.userIds || [])
+    });
+    setEditDialog(true);
+  };
+
+  const handleUpdateGroup = async () => {
+    if (!editGroupState.name.trim()) {
+      toast({ title: "Validation Error", description: "Group name is required.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      await apiFetch(`/api/company/groups/${editGroupState._id}`, token, {
+        method: "PUT",
+        body: JSON.stringify({ name: editGroupState.name, userIds: editGroupState.userIds })
+      });
+
+      toast({
+        title: "Group Updated",
+        description: `${editGroupState.name} has been successfully updated.`,
+      });
+
+      setEditDialog(false);
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update group.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteGroup = async (group: any, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    
+    if (!window.confirm(`Are you sure you want to delete the group "${group.name}"?`)) {
+      return;
+    }
+
+    try {
+      await apiFetch(`/api/company/groups/${group._id}`, token, {
+        method: "DELETE"
+      });
+
+      toast({
+        title: "Group Deleted",
+        description: `${group.name} has been deleted.`,
+      });
+
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete group.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleViewGroup = (group: any, e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
@@ -112,6 +205,10 @@ const Groups = () => {
     setSelectedGroup(group);
     setViewDialog(true);
   };
+
+  const filteredGroups = groups.filter((g: any) => g.name?.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredMembers = members.filter((m: any) => m.name?.toLowerCase().includes(memberSearchQuery.toLowerCase()) || m.email?.toLowerCase().includes(memberSearchQuery.toLowerCase()));
+  const filteredEditMembers = members.filter((m: any) => m.name?.toLowerCase().includes(editMemberSearchQuery.toLowerCase()) || m.email?.toLowerCase().includes(editMemberSearchQuery.toLowerCase()));
 
   if (loading) return <div className="flex h-screen items-center justify-center">Loading groups...</div>;
 
@@ -163,8 +260,18 @@ const Groups = () => {
 
         {/* Groups Table */}
         <Card className="overflow-hidden border-border bg-card">
-          <CardHeader>
+          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <CardTitle className="text-lg">Group List</CardTitle>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search groups..."
+                className="pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </CardHeader>
           <CardContent className="p-0 overflow-x-auto">
             <Table className="min-w-[600px]">
@@ -176,25 +283,45 @@ const Groups = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {groups.length === 0 ? (
+                {filteredGroups.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center text-muted-foreground h-24">
                       No groups found. Create one.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  groups.map((group, index) => (
+                  filteredGroups.map((group: any, index: number) => (
                     <TableRow key={group._id || index}>
                       <TableCell className="font-medium">{group.name}</TableCell>
                       <TableCell>{group.users ? group.users.length : (group.userIds?.length || 0)} members</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right flex items-center justify-end gap-2">
                         <Button 
                           variant="ghost" 
-                          size="sm" 
+                          size="icon"
                           type="button"
                           onClick={(e) => handleViewGroup(group, e)}
+                          title="View Members"
                         >
-                          View
+                          <UsersRound className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          type="button"
+                          onClick={(e) => openEditGroup(group, e)}
+                          title="Edit Group"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          type="button"
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          onClick={(e) => handleDeleteGroup(group, e)}
+                          title="Delete Group"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -227,11 +354,17 @@ const Groups = () => {
               
               <div className="space-y-2">
                 <Label>Select Members</Label>
+                <Input 
+                  placeholder="Search users..." 
+                  value={memberSearchQuery}
+                  onChange={(e) => setMemberSearchQuery(e.target.value)}
+                  className="mb-2"
+                />
                 <div className="border border-border rounded-md p-3 max-h-48 overflow-y-auto space-y-3">
-                  {members.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No users available.</p>
+                  {filteredMembers.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No users found.</p>
                   ) : (
-                    members.map(member => (
+                    filteredMembers.map((member: any) => (
                       <div key={member._id} className="flex items-center space-x-2">
                         <Checkbox 
                           id={`user-${member._id}`} 
@@ -256,6 +389,67 @@ const Groups = () => {
             <DialogFooter>
               <Button variant="outline" onClick={() => setAddDialog(false)}>Cancel</Button>
               <Button onClick={handleCreateGroup}>Create Group</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Group Dialog */}
+        <Dialog open={editDialog} onOpenChange={setEditDialog}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit Group</DialogTitle>
+              <DialogDescription>
+                Update the group name or modify nested users.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Group Name</Label>
+                <Input
+                  id="edit-name"
+                  placeholder="e.g. Sales Team"
+                  value={editGroupState.name}
+                  onChange={(e) => setEditGroupState({ ...editGroupState, name: e.target.value })}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Select Members</Label>
+                <Input 
+                  placeholder="Search users..." 
+                  value={editMemberSearchQuery}
+                  onChange={(e) => setEditMemberSearchQuery(e.target.value)}
+                  className="mb-2"
+                />
+                <div className="border border-border rounded-md p-3 max-h-48 overflow-y-auto space-y-3">
+                  {filteredEditMembers.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No users found.</p>
+                  ) : (
+                    filteredEditMembers.map((member: any) => (
+                      <div key={member._id} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`edit-user-${member._id}`} 
+                          checked={editGroupState.userIds.includes(member._id)}
+                          onCheckedChange={() => toggleUserSelectionEdit(member._id)}
+                        />
+                        <Label
+                          htmlFor={`edit-user-${member._id}`}
+                          className="text-sm font-normal cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {member.name} ({member.email})
+                        </Label>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {editGroupState.userIds.length} user(s) selected
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditDialog(false)}>Cancel</Button>
+              <Button onClick={handleUpdateGroup}>Save Changes</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

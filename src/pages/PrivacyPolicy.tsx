@@ -47,7 +47,7 @@ const PrivacyPolicy = () => {
               className="text-white/90"
             >
               Your privacy is important to us. This Privacy Policy explains how
-              WebMokTeamTrack collects, uses, and protects your information.
+              MULTICLOUTTeamTrEX collects, uses, and protects your information.
             </motion.p>
           </motion.div>
 
@@ -154,7 +154,7 @@ const PrivacyPolicy = () => {
                 please contact us at:
               </p>
               <p className="text-white font-semibold mt-3">
-                support@webmokteamtrack.com
+                support@MULTICLOUTteamtrack.com
               </p>
             </div>
 

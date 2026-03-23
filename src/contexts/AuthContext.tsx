@@ -10,7 +10,8 @@ export type AppRole =
   | "super_admin"
   | "company_admin"
   | "sub_admin"
-  | "user";
+  | "user"
+  |"employee";
 
 interface AuthUser {
   id: string;
@@ -18,6 +19,7 @@ interface AuthUser {
   email: string;
   role: AppRole;
   company_id: string | null;
+  
 }
 
 interface AuthContextType {

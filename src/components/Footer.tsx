@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 import { Apple, Monitor, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
 
+// ✅ IMPORT LOGO
+import logo from "@/images/logo.png";
+
 const Footer = () => (
-  <footer
-    className="text-white bg-[#0e2f3f]"
-    // style={{ background: "linear-gradient(to right, #135F80, #2C7862)" }}
-  >
+  <footer className="text-white bg-[#0e2f3f]">
     <div className="container mx-auto px-6 py-16 max-w-7xl">
 
       <div className="grid md:grid-cols-5 gap-10">
@@ -13,9 +13,14 @@ const Footer = () => (
         {/* Logo & CTA */}
         <div className="md:col-span-2">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center font-bold text-white">
-              W
-            </div>
+
+            {/* ✅ LOGO IMAGE */}
+            <img
+              src={logo}
+              alt="logo"
+              className="h-10 w-auto object-contain"
+            />
+
             <span className="text-xl font-bold">TeamTrack</span>
           </div>
 
@@ -65,61 +70,38 @@ const Footer = () => (
             <Link to="/help">Help Center</Link>
             <Link to="/privacypolicy">Privacy Policy</Link>
             <Link to="/About">About Us</Link>
-           
           </div>
         </div>
 
-        {/* Download Section */}
-        {/* <div>
+        {/* Download */}
+        <div>
           <h4 className="font-semibold mb-4">Download For</h4>
 
           <div className="flex flex-col gap-4">
 
-            <button className="flex items-center gap-3 bg-white text-[#135F80] px-5 py-3 rounded-full hover:scale-105 transition">
-              <Apple size={18} />
-              Get For <span className="font-bold">Mac OS</span>
-            </button>
+            <Link to="/download">
+              <button className="w-full flex items-center gap-3 bg-white text-[#135F80] px-5 py-3 rounded-full hover:scale-105 transition">
+                <Apple size={18} />
+                Get For <span className="font-bold">Mac OS</span>
+              </button>
+            </Link>
 
-            <button className="flex items-center gap-3 bg-white text-[#135F80] px-5 py-3 rounded-full hover:scale-105 transition">
-              <Monitor size={18} />
-              Get For <span className="font-bold">Windows</span>
-            </button>
+            <Link to="/download">
+              <button className="w-full flex items-center gap-3 bg-white text-[#135F80] px-5 py-3 rounded-full hover:scale-105 transition">
+                <Monitor size={18} />
+                Get For <span className="font-bold">Windows</span>
+              </button>
+            </Link>
 
-            <button className="flex items-center gap-3 bg-white text-[#135F80] px-5 py-3 rounded-full hover:scale-105 transition">
-              🐧
-              Get For <span className="font-bold">Linux</span>
-            </button>
+            <Link to="/download">
+              <button className="w-full flex items-center gap-3 bg-white text-[#135F80] px-5 py-3 rounded-full hover:scale-105 transition">
+                🐧
+                Get For <span className="font-bold">Linux</span>
+              </button>
+            </Link>
 
           </div>
-        </div> */}
-<div>
-  <h4 className="font-semibold mb-4">Download For</h4>
-
-  <div className="flex flex-col gap-4">
-
-    <Link to="/download">
-      <button className="w-full flex items-center gap-3 bg-white text-[#135F80] px-5 py-3 rounded-full hover:scale-105 transition">
-        <Apple size={18} />
-        Get For <span className="font-bold">Mac OS</span>
-      </button>
-    </Link>
-
-    <Link to="/download">
-      <button className="w-full flex items-center gap-3 bg-white text-[#135F80] px-5 py-3 rounded-full hover:scale-105 transition">
-        <Monitor size={18} />
-        Get For <span className="font-bold">Windows</span>
-      </button>
-    </Link>
-
-    <Link to="/download">
-      <button className="w-full flex items-center gap-3 bg-white text-[#135F80] px-5 py-3 rounded-full hover:scale-105 transition">
-        🐧
-        Get For <span className="font-bold">Linux</span>
-      </button>
-    </Link>
-
-  </div>
-</div>
+        </div>
       </div>
 
       {/* Bottom */}

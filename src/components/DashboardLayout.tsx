@@ -13,7 +13,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       <div className="md:hidden flex items-center justify-between p-4 border-b border-border bg-card absolute top-0 left-0 right-0 z-30">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center font-bold text-primary-foreground text-xs">W</div>
-          <span className="font-bold text-foreground text-sm">WEBMOK</span>
+          <span className="font-bold text-foreground text-sm">MULTICLOUT</span>
         </div>
         <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}

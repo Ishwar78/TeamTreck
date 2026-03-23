@@ -16,6 +16,7 @@ export interface IUser extends Document {
   }>;
   status: 'active' | 'suspended' | 'invited';
   invite_token?: string;
+  workingHours?: string;
   last_login?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -78,6 +79,11 @@ const UserSchema = new Schema<IUser>(
       type: String,
       enum: ['active', 'suspended', 'invited'],
       default: 'invited',
+    },
+
+    workingHours: {
+      type: String,
+      default: "9:00 AM to 6:00 PM",
     },
 
     invite_token: {

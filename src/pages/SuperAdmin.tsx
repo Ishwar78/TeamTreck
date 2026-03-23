@@ -58,7 +58,7 @@ const SuperAdminSidebar = () => {
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center font-bold text-primary-foreground text-xs">W</div>
             <div>
-              <span className="font-bold text-foreground text-sm block leading-tight">WEBMOK</span>
+              <span className="font-bold text-foreground text-sm block leading-tight">MULTICLOUT</span>
               <span className="text-xs text-primary">Super Admin</span>
             </div>
           </div>
@@ -124,7 +124,7 @@ export default function SuperAdmin() {
       <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-800 bg-[#13161C] absolute top-0 left-0 right-0 z-30">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center font-bold text-primary-foreground text-xs">W</div>
-          <span className="font-bold text-foreground text-sm">WEBMOK</span>
+          <span className="font-bold text-foreground text-sm">MULTICLOUT</span>
         </div>
         <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
           {mobileMenuOpen ? <Trash2 size={24} className="hidden" /> : <MoreHorizontal size={24} />}

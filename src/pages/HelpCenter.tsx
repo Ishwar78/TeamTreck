@@ -73,7 +73,7 @@ const HelpCenter = () => {
               className="text-white/90 mb-8 max-w-2xl mx-auto"
             >
               Find answers, guides, and resources to get the most out of
-              WebMokTeamTrack.
+              MULTICLOUTTeamTrex.
             </motion.p>
 
             {/* Search Bar */}

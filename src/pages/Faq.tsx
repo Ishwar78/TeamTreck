@@ -19,22 +19,22 @@ const fadeUp = {
 
 const faqs = [
   {
-    question: "What is WebMokTeamTrack?",
+    question: "What is MULTICLOUTTeamTrex?",
     answer:
-      "WebMokTeamTrack is a powerful time-tracking software designed to help teams, businesses, and freelancers efficiently manage work hours with real-time tracking and detailed reports.",
+      "MULTICLOUTTeamTrex is a powerful time-tracking software designed to help teams, businesses, and freelancers efficiently manage work hours with real-time tracking and detailed reports.",
   },
   {
-    question: "Who can use WebMokTeamTrack?",
+    question: "Who can use MULTICLOUTTeamTrex?",
     answer:
-      "WebMokTeamTrack is ideal for startups, enterprises, remote teams, freelancers, agencies, and growing companies.",
+      "MULTICLOUTTeamTrex is ideal for startups, enterprises, remote teams, freelancers, agencies, and growing companies.",
   },
   {
-    question: "Does WebMokTeamTrack provide reports?",
+    question: "Does MULTICLOUTTeamTrex provide reports?",
     answer:
-      "Yes, WebMokTeamTrack provides detailed daily, weekly, and monthly productivity reports with export options.",
+      "Yes, MULTICLOUTTeamTrex provides detailed daily, weekly, and monthly productivity reports with export options.",
   },
   {
-    question: "How much does WebMokTeamTrack cost?",
+    question: "How much does MULTICLOUTTeamTrex cost?",
     answer:
       "We offer flexible pricing plans based on team size. You can start with a free trial.",
   },
@@ -82,7 +82,7 @@ const FAQ = () => {
                 viewport={{ once: true }}
                 className="text-white/90 leading-relaxed mb-8"
               >
-                WebMokTeamTrack helps teams, businesses, and freelancers efficiently manage
+                MULTICLOUTTeamTrex helps teams, businesses, and freelancers efficiently manage
                 work hours with real-time tracking, reports, and seamless collaboration.
               </motion.p>
 

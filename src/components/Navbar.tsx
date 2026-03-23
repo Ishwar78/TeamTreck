@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BookDemoModal from "@/components/BookDemoModal";
-
+import logo from "@/images/logo.png";
 const features = [
   { label: "Time Tracker", href: "/features/time-tracker" },
   { label: "Team Management", href: "/features/team-management" },
@@ -29,13 +29,18 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 glass">
+      {/* 👉 BG WHITE */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-md">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
+
+          {/* 👉 LOGO IMAGE */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center font-bold text-primary-foreground text-sm">
-              Web
-            </div>
-            <span className="text-lg font-bold text-white">WEBMOK</span>
+           <img
+              src={logo}
+              alt="logo"
+              className="h-10 w-auto object-contain"
+            />
+            
           </Link>
 
           {/* Desktop nav */}
@@ -45,21 +50,21 @@ const Navbar = () => {
 
             <Link
               to="/pricing"
-              className="text-sm text-white hover:text-white transition-colors"
+              className="text-sm text-black hover:text-primary transition-colors"
             >
               Pricing
             </Link>
 
             <Link
               to="/download"
-              className="text-sm text-white hover:text-white transition-colors"
+              className="text-sm text-black hover:text-primary transition-colors"
             >
               Download
             </Link>
 
             <Link
               to="/contact"
-              className="text-sm text-white hover:text-white transition-colors"
+              className="text-sm text-black hover:text-primary transition-colors"
             >
               Contact
             </Link>
@@ -67,18 +72,18 @@ const Navbar = () => {
 
           <div className="hidden lg:flex items-center gap-3">
             <Link to="/admin/login">
-              <Button variant="ghost" size="sm" className="text-white hover:text-white">
+              <Button variant="ghost" size="sm" className="text-black">
                 Login
               </Button>
             </Link>
 
-            <Button size="sm" onClick={() => setOpenDemo(true)}>
+            <Button size="sm">
               Book Demo
             </Button>
           </div>
 
           <button
-            className="lg:hidden text-white"
+            className="lg:hidden text-black"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
             {mobileOpen ? <X size={24} /> : <Menu size={24} />}
@@ -91,13 +96,13 @@ const Navbar = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden glass border-t border-border"
+              className="lg:hidden bg-white border-t"
             >
               <div className="container mx-auto px-4 py-4 flex flex-col gap-3">
 
                 <Link
                   to="/pricing"
-                  className="text-sm text-white py-2"
+                  className="text-sm text-black py-2"
                   onClick={() => setMobileOpen(false)}
                 >
                   Pricing
@@ -105,7 +110,7 @@ const Navbar = () => {
 
                 <Link
                   to="/download"
-                  className="text-sm text-white py-2"
+                  className="text-sm text-black py-2"
                   onClick={() => setMobileOpen(false)}
                 >
                   Download
@@ -113,7 +118,7 @@ const Navbar = () => {
 
                 <Link
                   to="/contact"
-                  className="text-sm text-white py-2"
+                  className="text-sm text-black py-2"
                   onClick={() => setMobileOpen(false)}
                 >
                   Contact
@@ -123,7 +128,7 @@ const Navbar = () => {
                   <Link to="/admin/login" className="flex-1">
                     <Button
                       variant="ghost"
-                      className="w-full text-white"
+                      className="w-full text-black"
                       size="sm"
                     >
                       Login
@@ -167,7 +172,7 @@ const NavDropdown = ({
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      <button className="flex items-center gap-1 text-sm text-white hover:text-white transition-colors">
+      <button className="flex items-center gap-1 text-sm text-black hover:text-primary transition-colors">
         {label} <ChevronDown size={14} />
       </button>
 
@@ -177,13 +182,13 @@ const NavDropdown = ({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
-            className="absolute top-full left-0 mt-2 w-48 rounded-lg glass shadow-card p-2"
+            className="absolute top-full left-0 mt-2 w-48 rounded-lg bg-white shadow-md p-2"
           >
             {items.map((item) => (
               <Link
                 key={item.label}
                 to={item.href}
-                className="block px-3 py-2 text-sm text-white hover:text-white hover:bg-secondary rounded-md transition-colors"
+                className="block px-3 py-2 text-sm text-black hover:bg-gray-100 rounded-md transition-colors"
               >
                 {item.label}
               </Link>

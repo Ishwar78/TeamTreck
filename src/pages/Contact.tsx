@@ -119,7 +119,7 @@ const res = await axios.post(`${API}/api/public/book-demo`, {
                 </div>
                 <div>
                   <p className="text-sm text-white/70">Email</p>
-                  <p className="font-medium">support@webmokteamtrack.com</p>
+                  <p className="font-medium">support@multiclouteamtrex.com</p>
                 </div>
               </div>
 

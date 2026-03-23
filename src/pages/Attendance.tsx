@@ -42,6 +42,10 @@ const Attendance = () => {
 
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [currentDate, setCurrentDate] = useState(new Date());
+  
+  const [customStartDate, setCustomStartDate] = useState<Date>(subDays(new Date(), 30));
+  const [customEndDate, setCustomEndDate] = useState<Date>(new Date());
+  
   const [selectedUser, setSelectedUser] = useState<string>("all");
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [attendanceData, setAttendanceData] = useState<AttendanceData[]>([]);
@@ -85,8 +89,8 @@ const Attendance = () => {
         display = format(currentDate, "MMMM yyyy");
         break;
       case "dateRange":
-        start = subDays(currentDate, 30);
-        end = currentDate;
+        start = startOfDay(customStartDate);
+        end = endOfDay(customEndDate);
         display = `${format(start, "dd MMM")} - ${format(end, "dd MMM yyyy")}`;
         break;
     }
@@ -100,7 +104,7 @@ const Attendance = () => {
     if (token && startDate && endDate) {
       fetchAttendance();
     }
-  }, [token, startDate, endDate, selectedUser]);
+  }, [token, startDate, endDate, selectedUser, viewMode, customStartDate, customEndDate]);
 
   const fetchAttendance = async () => {
     setLoading(true);
@@ -227,16 +231,42 @@ const Attendance = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" onClick={handlePrev}>
-                  <ChevronLeft size={18} />
-                </Button>
-                <div className="flex items-center gap-2 min-w-[140px] justify-center">
-                  <Calendar className="text-primary hidden sm:block" size={20} />
-                  <h2 className="text-base sm:text-lg font-semibold whitespace-nowrap">{displayRange}</h2>
-                </div>
-                <Button variant="ghost" size="icon" onClick={handleNext}>
-                  <ChevronRight size={18} />
-                </Button>
+                {viewMode !== "dateRange" ? (
+                  <>
+                    <Button variant="ghost" size="icon" onClick={handlePrev}>
+                      <ChevronLeft size={18} />
+                    </Button>
+                    <div className="flex items-center gap-2 min-w-[140px] justify-center">
+                      <Calendar className="text-primary hidden sm:block" size={20} />
+                      <h2 className="text-base sm:text-lg font-semibold whitespace-nowrap">{displayRange}</h2>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={handleNext}>
+                      <ChevronRight size={18} />
+                    </Button>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="date"
+                      value={format(customStartDate, "yyyy-MM-dd")}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val) setCustomStartDate(new Date(val));
+                      }}
+                      className="flex h-9 w-32 md:w-40 rounded-md border border-input bg-background px-3 py-1 text-sm font-medium shadow-sm transition-colors cursor-pointer"
+                    />
+                    <span className="text-muted-foreground text-sm font-medium">to</span>
+                    <input
+                      type="date"
+                      value={format(customEndDate, "yyyy-MM-dd")}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val) setCustomEndDate(new Date(val));
+                      }}
+                      className="flex h-9 w-32 md:w-40 rounded-md border border-input bg-background px-3 py-1 text-sm font-medium shadow-sm transition-colors cursor-pointer"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Employee Selector (Admin Only) */}
@@ -270,7 +300,7 @@ const Attendance = () => {
                   onClick={() => setViewMode(mode)}
                   className="capitalize whitespace-nowrap"
                 >
-                  {mode === "dateRange" ? "Date Range" : mode}
+                  {mode === "dateRange" ? "Custom Date Range" : mode}
                 </Button>
               ))}
             </div>

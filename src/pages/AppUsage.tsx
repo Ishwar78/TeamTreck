@@ -26,6 +26,10 @@ const AppUsage = () => {
   const [data, setData] = useState<{ apps: any[], urls: any[] }>({ apps: [], urls: [] });
   const [expandedApps, setExpandedApps] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
+  
+  const [appSearch, setAppSearch] = useState("");
+  const [urlSearch, setUrlSearch] = useState("");
+  
   const formatDuration = (totalSeconds: number) => {
     const hrs = Math.floor(totalSeconds / 3600);
     const mins = Math.floor((totalSeconds % 3600) / 60);
@@ -113,6 +117,9 @@ const AppUsage = () => {
   const apps = data.apps || [];
   const urls = data.urls || [];
 
+  const filteredApps = apps.filter((a: any) => a.name?.toLowerCase().includes(appSearch.toLowerCase()));
+  const filteredUrls = urls.filter((u: any) => u.url?.toLowerCase().includes(urlSearch.toLowerCase()));
+
   const maxAppSeconds = useMemo(() => Math.max(...apps.map((a: any) => a.seconds || 0), 1), [apps]);
 
   const maxUrlSeconds = useMemo(() => Math.max(...urls.map((u: any) => u.seconds || 0), 1), [urls]);
@@ -182,12 +189,23 @@ const AppUsage = () => {
               animate={{ opacity: 1, y: 0 }}
               className="rounded-xl bg-gradient-card border border-border"
             >
-              <div className="p-4 border-b border-border flex items-center gap-2">
-                <Monitor size={16} className="text-primary" />
-                <h2 className="font-semibold text-foreground text-sm">Top Applications</h2>
+              <div className="p-4 border-b border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <Monitor size={16} className="text-primary" />
+                  <h2 className="font-semibold text-foreground text-sm">Top Applications</h2>
+                </div>
+                <div className="relative w-full sm:w-48">
+                  <input
+                    type="text"
+                    placeholder="Search apps..."
+                    value={appSearch}
+                    onChange={(e) => setAppSearch(e.target.value)}
+                    className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
               </div>
               <div className="p-4 space-y-3">
-                {apps.map((app, i) => {
+                {filteredApps.map((app: any, i: number) => {
                   const merged = mergeIntervals(app.intervals);
                   const latestInterval = merged[merged.length - 1];
                   
@@ -287,7 +305,7 @@ const AppUsage = () => {
                     </div>
                   );
                 })}
-                {apps.length === 0 && (
+                {filteredApps.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-4">No data available</p>
                 )}
               </div>
@@ -301,12 +319,23 @@ const AppUsage = () => {
               transition={{ delay: 0.1 }}
               className="rounded-xl bg-gradient-card border border-border"
             >
-              <div className="p-4 border-b border-border flex items-center gap-2">
-                <Globe size={16} className="text-primary" />
-                <h2 className="font-semibold text-foreground text-sm">Top Websites</h2>
+              <div className="p-4 border-b border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <Globe size={16} className="text-primary" />
+                  <h2 className="font-semibold text-foreground text-sm">Top Websites</h2>
+                </div>
+                <div className="relative w-full sm:w-48">
+                  <input
+                    type="text"
+                    placeholder="Search websites..."
+                    value={urlSearch}
+                    onChange={(e) => setUrlSearch(e.target.value)}
+                    className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
               </div>
               <div className="p-4 space-y-3">
-                {urls.map((site, i) => {
+                {filteredUrls.map((site: any, i: number) => {
                   const mergedSite = mergeIntervals(site.intervals);
                   const isExpanded = expandedApps[`url-${site.url}`];
 
@@ -383,7 +412,7 @@ const AppUsage = () => {
                     </motion.div>
                   );
                 })}
-                {urls.length === 0 && (
+                {filteredUrls.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-4">No data available</p>
                 )}
               </div>

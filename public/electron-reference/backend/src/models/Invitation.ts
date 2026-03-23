@@ -6,6 +6,7 @@ export interface IInvitation extends Document {
     role: 'admin' | 'sub_admin' | 'user' | 'employee';
     token: string;
     status: 'pending' | 'accepted' | 'expired';
+    workingHours?: string;
     expiresAt: Date;
 }
 
@@ -15,6 +16,7 @@ const InvitationSchema = new Schema<IInvitation>({
     role: { type: String, enum: ['admin', 'sub_admin', 'user', 'employee'], default: 'user' },
     token: { type: String, required: true, unique: true },
     status: { type: String, enum: ['pending', 'accepted', 'expired'], default: 'pending' },
+    workingHours: { type: String, default: "9:00 AM to 6:00 PM" },
     expiresAt: { type: Date, required: true },
 }, { timestamps: true });
 
