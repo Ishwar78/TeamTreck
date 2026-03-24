@@ -11,10 +11,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Mail, UserCheck, UserX, Edit2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const TeamManagement = () => {
   const { token } = useAuth();
   const { toast } = useToast();
+  const { canAction } = usePermissions();
 
   const [members, setMembers] = useState<any[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<any[]>([]);
@@ -191,9 +193,11 @@ const TeamManagement = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex flex-col items-end gap-1">
-                          <Button variant="outline" size="sm" onClick={() => handleEditClick(member)} className="gap-2">
-                            <Edit2 size={12} /> Edit Hours
-                          </Button>
+                          {canAction("team", "edit") && (
+                            <Button variant="outline" size="sm" onClick={() => handleEditClick(member)} className="gap-2">
+                              <Edit2 size={12} /> Edit Hours
+                            </Button>
+                          )}
                           <span className="text-xs text-muted-foreground whitespace-nowrap">
                             {member.workingHours || "9:00 AM to 6:00 PM"}
                           </span>

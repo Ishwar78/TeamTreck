@@ -18,36 +18,37 @@ interface MenuItem {
   label: string;
   path: string;
   permission: Permission;
+  module?: string;
 }
 
 const menuItems: MenuItem[] = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", permission: "view_dashboard" },
-  { icon: Users, label: "Team", path: "/dashboard/team", permission: "view_team" },
-  { icon: UsersRound, label: "Groups", path: "/dashboard/groups", permission: "manage_team" },
-  { icon: Clock, label: "Time Logs", path: "/dashboard/time", permission: "view_time_logs" },
-  { icon: Camera, label: "Screenshots", path: "/dashboard/screenshots", permission: "view_screenshots" },
-  { icon: Globe, label: "App & URL Usage", path: "/dashboard/usage", permission: "view_app_usage" },
-  // { icon: Activity, label: "Activity Feed", path: "/dashboard/activity", permission: "view_activity" },
-  { icon: BarChart3, label: "Reports", path: "/dashboard/reports", permission: "view_reports" },
-  { icon: UserPlus, label: "Invite Members", path: "/dashboard/invite", permission: "invite_members" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", permission: "view_dashboard", module: "dashboard" },
+  { icon: Users, label: "Team", path: "/dashboard/team", permission: "view_team", module: "team" },
+  { icon: UsersRound, label: "Groups", path: "/dashboard/groups", permission: "manage_team", module: "groups" },
+  { icon: Clock, label: "Time Logs", path: "/dashboard/time", permission: "view_time_logs", module: "time_logs" },
+  { icon: Camera, label: "Screenshots", path: "/dashboard/screenshots", permission: "view_screenshots", module: "screenshots" },
+  { icon: Globe, label: "App & URL Usage", path: "/dashboard/usage", permission: "view_app_usage", module: "app_usage" },
+  // { icon: Activity, label: "Activity Feed", path: "/dashboard/activity", permission: "view_activity", module: "activity" },
+  { icon: BarChart3, label: "Reports", path: "/dashboard/reports", permission: "view_reports", module: "reports" },
+  { icon: UserPlus, label: "Invite Members", path: "/dashboard/invite", permission: "invite_members", module: "invite_members" },
   // { icon: FileText, label: "API Spec", path: "/dashboard/api-spec", permission: "view_api_spec" },
-  { icon: Bell, label: "Notifications", path: "/dashboard/notifications", permission: "manage_team" },
+  { icon: Bell, label: "Notifications", path: "/dashboard/notifications", permission: "manage_team", module: "notifications" },
   // { icon: ShieldBan, label: "Restrictions", path: "/dashboard/restrictions", permission: "configure_monitoring" },
-  { icon: Timer, label: "Justifications", path: "/dashboard/justifications", permission: "view_time_logs" },
-  { icon: FileText, label: "Time Claims", path: "/dashboard/time-claim", permission: "manage_team" },
-  { icon: CalendarCheck, label: "Attendance", path: "/dashboard/attendance", permission: "view_attendance" },
+  { icon: Timer, label: "Justifications", path: "/dashboard/justifications", permission: "view_time_logs", module: "justifications" },
+  { icon: FileText, label: "Time Claims", path: "/dashboard/time-claim", permission: "manage_team", module: "time_claims" },
+  { icon: CalendarCheck, label: "Attendance", path: "/dashboard/attendance", permission: "view_attendance", module: "attendance" },
   // { icon: PlayCircle, label: "Sessions", path: "/dashboard/sessions", permission: "view_sessions" },
 
   // ✅ Chat
- { icon: MessageCircle, label: "Chat", path: "/dashboard/chat", permission: "view_team" },
+ { icon: MessageCircle, label: "Chat", path: "/dashboard/chat", permission: "view_team", module: "chat" },
 // ✅ Task
-{ icon: CheckSquare, label: "Tasks", path: "/dashboard/task", permission: "view_dashboard" },
+{ icon: CheckSquare, label: "Tasks", path: "/dashboard/task", permission: "view_dashboard", module: "tasks" },
 
-{ icon: ShieldBan, label: "Role Management", path: "/dashboard/roles", permission: "manage_roles" },
+{ icon: ShieldBan, label: "Role Management", path: "/dashboard/roles", permission: "manage_roles", module: "roles" },
 
-  { icon: CreditCard, label: "Billing", path: "/dashboard/billing", permission: "manage_billing" },
-  { icon: Settings, label: "Settings", path: "/dashboard/settings", permission: "manage_settings" },
-  { icon: LifeBuoy, label: "Support Tickets", path: "/dashboard/support", permission: "manage_settings" },
+  { icon: CreditCard, label: "Billing", path: "/dashboard/billing", permission: "manage_billing", module: "billing" },
+  // { icon: Settings, label: "Settings", path: "/dashboard/settings", permission: "manage_settings", module: "settings" },
+  { icon: LifeBuoy, label: "Support Tickets", path: "/dashboard/support", permission: "manage_settings", module: "support" },
 
 ];
 
@@ -58,10 +59,15 @@ interface DashboardSidebarProps {
 const DashboardSidebar = ({ onCloseMobile }: DashboardSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const { can } = usePermissions();
+  const { can, canAction } = usePermissions();
   const { user, logout } = useAuth();
 
-  const visibleItems = menuItems.filter((item) => can(item.permission));
+  const visibleItems = menuItems.filter((item) => {
+    if (user && user.role === 'custom' && item.module) {
+      return !!user.customPermissions?.[item.module];
+    }
+    return can(item.permission);
+  });
 
   return (
     <aside className={cn(

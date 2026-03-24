@@ -1,5 +1,5 @@
 // ─── Role Types ───
-export type AppRole = "super_admin" | "company_admin" | "sub_admin" | "user";
+export type AppRole = "super_admin" | "company_admin" | "sub_admin" | "user" | "employee";
 
 // ─── Permission Keys ───
 export type Permission =
@@ -78,6 +78,12 @@ const PERMISSION_MATRIX: Record<AppRole, Set<Permission>> = {
     "view_notifications",
     "view_attendance",
   ]),
+  employee: new Set([
+    "view_dashboard",
+    "view_time_logs",
+    "view_notifications",
+    "view_attendance",
+  ]),
 };
 
 export function hasPermission(role: AppRole, permission: Permission): boolean {
@@ -94,6 +100,7 @@ export const ROLE_LABELS: Record<AppRole, string> = {
   company_admin: "Company Admin",
   sub_admin: "Sub-Admin",
   user: "User",
+  employee: "Employee",
 };
 
 export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
@@ -101,5 +108,6 @@ export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
   company_admin: "Full company control — invite users, manage billing, configure monitoring",
   sub_admin: "View users, reports & screenshots — no billing or settings access",
   user: "Monitored employee — view own dashboard and time logs",
+  employee: "Monitored employee — view own dashboard and time logs",
 };
  

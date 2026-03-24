@@ -10,6 +10,7 @@ import { Plan } from '../models/Plan';
 import { AppError } from '../utils/errors';
 import { authenticate } from '../middleware/auth';
 import { requireRole } from '../middleware/roleGuard'; 
+import { CustomRole } from '../models/CustomRole';
 
 const router = Router();
 
@@ -451,6 +452,120 @@ router.post('/notifications/send', authenticate, requireRole('company_admin'), a
   } catch (err) {
     next(err);
   }
+});
+
+/* ================= DIRECT USER CREATION (ROLE MANAGEMENT) ================= */
+
+router.post('/users/create', authenticate, requireRole('company_admin'), async (req: any, res, next) => {
+  try {
+    const { name, email, password, role, custom_role_id } = req.body;
+    if (!name || !email || !password || !role) {
+      throw new AppError('Name, email, password, and role are required', 400);
+    }
+
+    const company = await Company.findById(req.auth!.company_id);
+    if (!company) throw new AppError('Company not found', 404);
+
+    // Limit check
+    const currentUsersCount = await User.countDocuments({ company_id: company._id });
+    const pendingInvitesCount = await Invitation.countDocuments({
+      company_id: company._id,
+      status: 'pending'
+    });
+    if (currentUsersCount + pendingInvitesCount >= company.max_users) {
+      throw new AppError('User limit reached for your plan. Please upgrade.', 403);
+    }
+
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) throw new AppError('User already exists in system', 400);
+
+    const hashed = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      company_id: company._id,
+      name,
+      email: email.toLowerCase(),
+      password_hash: hashed,
+      role: custom_role_id ? 'custom' : role,
+      custom_role_id: custom_role_id || undefined,
+      status: 'active'
+    });
+
+    res.status(201).json({ success: true, user });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* ================= UPDATE ROLE ================= */
+
+router.put('/users/:id/role', authenticate, requireRole('company_admin'), async (req, res, next) => {
+  try {
+    const { role, custom_role_id } = req.body;
+    if (!role) throw new AppError('Role is required', 400);
+
+    const user = await User.findOneAndUpdate(
+      { _id: req.params.id, company_id: req.auth!.company_id },
+      { 
+        role: custom_role_id ? 'custom' : role,
+        custom_role_id: custom_role_id || null 
+      },
+      { new: true }
+    );
+
+    if (!user) throw new AppError('User not found', 404);
+
+    res.json({ success: true, user });
+  } catch(err) {
+    next(err);
+  }
+});
+
+/* ================= CUSTOM ROLES ================= */
+router.post('/roles', authenticate, requireRole('company_admin'), async (req, res, next) => {
+  try {
+    const { name, permissions } = req.body;
+    if (!name) throw new AppError('Role name is required', 400);
+
+    const role = await CustomRole.create({
+      company_id: req.auth!.company_id,
+      name,
+      permissions: permissions || {}
+    });
+
+    res.status(201).json({ success: true, role });
+  } catch (err) { next(err); }
+});
+
+router.get('/roles', authenticate, requireRole('company_admin'), async (req, res, next) => {
+  try {
+    const roles = await CustomRole.find({ company_id: req.auth!.company_id });
+    res.json({ success: true, roles });
+  } catch (err) { next(err); }
+});
+
+router.put('/roles/:id', authenticate, requireRole('company_admin'), async (req, res, next) => {
+  try {
+    const { name, permissions } = req.body;
+    const role = await CustomRole.findOneAndUpdate(
+      { _id: req.params.id, company_id: req.auth!.company_id },
+      { name, permissions },
+      { new: true }
+    );
+    if (!role) throw new AppError('Role not found', 404);
+    res.json({ success: true, role });
+  } catch (err) { next(err); }
+});
+
+router.delete('/roles/:id', authenticate, requireRole('company_admin'), async (req, res, next) => {
+  try {
+    // Check if any users are using this role
+    const usersWithRole = await User.countDocuments({ custom_role_id: req.params.id });
+    if (usersWithRole > 0) throw new AppError('Cannot delete role currently assigned to users', 400);
+
+    const role = await CustomRole.findOneAndDelete({ _id: req.params.id, company_id: req.auth!.company_id });
+    if (!role) throw new AppError('Role not found', 404);
+    res.json({ success: true, message: 'Role deleted' });
+  } catch (err) { next(err); }
 });
 
 export const companyRoutes = router;

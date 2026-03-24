@@ -37,8 +37,9 @@ const HOURLY_COLUMNS = ["7 AM", "8 AM", "9 AM", "10 AM", "11 AM", "12 PM", "1 PM
 
 const Attendance = () => {
   const { token, user } = useAuth();
-  const { can, role } = usePermissions();
-  const isAdmin = can("manage_team") || role === "company_admin" || role === "sub_admin";
+  const { can, role, canAction } = usePermissions();
+  
+  const isAdmin = can("manage_team") || role === "company_admin" || role === "sub_admin" || (role === "custom" && canAction("attendance"));
 
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [currentDate, setCurrentDate] = useState(new Date());

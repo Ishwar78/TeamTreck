@@ -11,7 +11,8 @@ export type AppRole =
   | "company_admin"
   | "sub_admin"
   | "user"
-  |"employee";
+  | "employee"
+  | "custom";
 
 interface AuthUser {
   id: string;
@@ -19,7 +20,10 @@ interface AuthUser {
   email: string;
   role: AppRole;
   company_id: string | null;
-  
+  companyName?: string | null;
+  customPermissions?: {
+    [module: string]: boolean;
+  };
 }
 
 interface AuthContextType {
@@ -113,6 +117,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email: data.user.email,
         role: data.user.role,
         company_id: data.user.company_id || null,
+        customPermissions: data.user.customPermissions,
       };
 
       setUser(userData);

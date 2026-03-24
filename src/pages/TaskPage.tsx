@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckSquare, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -28,7 +29,8 @@ const TaskPage = () => {
     assignedTo: "",
   });
 
-  const isAdmin = user?.role === "company_admin" || user?.role === "sub_admin";
+  const { canAction } = usePermissions();
+  const isAdmin = user?.role === "company_admin" || user?.role === "sub_admin" || (user?.role === "custom" && canAction("tasks"));
 
   useEffect(() => {
     if (token) {

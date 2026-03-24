@@ -1,7 +1,7 @@
 export interface AuthPayload {
   user_id: string;
   company_id: string | null;
-  role: 'super_admin' | 'company_admin' | 'sub_admin' | 'user' | 'employee';
+  role: 'super_admin' | 'company_admin' | 'sub_admin' | 'user' | 'employee' | 'custom';
   device_id: string;
 }
 
@@ -18,7 +18,8 @@ export type AppRole =
   | 'company_admin'
   | 'sub_admin'
   | 'user'
-  | 'employee';
+  | 'employee'
+  | 'custom';
 
 export interface PaginationQuery {
   page?: number;

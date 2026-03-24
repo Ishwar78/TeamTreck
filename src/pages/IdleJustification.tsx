@@ -62,10 +62,10 @@ const IdleJustification = () => {
   const [loading, setLoading] = useState(true);
   const [reviewNote, setReviewNote] = useState("");
   const { toast } = useToast();
-  const { role } = usePermissions();
+  const { role, canAction } = usePermissions();
   const { token } = useAuth();
 
-  const isAdmin = role === "company_admin" || role === "sub_admin";
+  const isAdmin = role === "company_admin" || role === "sub_admin" || (role === "custom" && canAction("justifications"));
 
   useEffect(() => {
     if (token) fetchClaims();

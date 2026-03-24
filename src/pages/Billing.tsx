@@ -46,16 +46,16 @@ interface CurrentPlanData {
   autoRenew: boolean;
 }
 
-const invoices = [
-  { id: "INV-2026-02", date: "2026-02-12", amount: 99, status: "paid" as const, plan: "Professional", downloadUrl: "#" },
-  { id: "INV-2026-01", date: "2026-01-12", amount: 99, status: "paid" as const, plan: "Professional", downloadUrl: "#" },
-  { id: "INV-2025-12", date: "2025-12-12", amount: 99, status: "paid" as const, plan: "Professional", downloadUrl: "#" },
-];
+// const invoices = [
+//   { id: "INV-2026-02", date: "2026-02-12", amount: 99, status: "paid" as const, plan: "Professional", downloadUrl: "#" },
+//   { id: "INV-2026-01", date: "2026-01-12", amount: 99, status: "paid" as const, plan: "Professional", downloadUrl: "#" },
+//   { id: "INV-2025-12", date: "2025-12-12", amount: 99, status: "paid" as const, plan: "Professional", downloadUrl: "#" },
+// ];
 
-const paymentEvents = [
-  { date: "2026-02-12", event: "Payment received", amount: "$99.00", type: "success" },
-  { date: "2026-01-12", event: "Payment received", amount: "$99.00", type: "success" },
-];
+// const paymentEvents = [
+//   { date: "2026-02-12", event: "Payment received", amount: "$99.00", type: "success" },
+//   { date: "2026-01-12", event: "Payment received", amount: "$99.00", type: "success" },
+// ];
 
 const statusColors: Record<string, string> = {
   active: "bg-status-active/10 text-status-active",
@@ -102,7 +102,7 @@ axios.get(`${API}/api/company/details`, { headers });
           users: p.users,
           storage: "Unlimited", // Defaulting as backend doesn't send this yet
           screenshots: "12/hr",
-          retention: "6 Months",
+          retention: "1 Months",
           features: p.features
         }));
         setAllPlans(mappedPlans);
@@ -159,7 +159,7 @@ axios.get(`${API}/api/company/details`, { headers });
 
   const userPct = (currentPlan.currentUsers / currentPlan.maxUsers) * 100;
   const storagePct = (currentPlan.storageUsed / currentPlan.storageMax) * 100;
-  const displayedInvoices = showAllInvoices ? invoices : invoices.slice(0, 4);
+  // const displayedInvoices = showAllInvoices ? invoices : invoices.slice(0, 4);
 
   const isUpgrade = (plan: Plan) => plan.price > currentPlan.price;
   const isDowngrade = (plan: Plan) => plan.price < currentPlan.price;
@@ -307,21 +307,21 @@ axios.get(`${API}/api/company/details`, { headers });
                 <Progress value={userPct} className="h-2" />
                 {userPct > 80 && <p className="text-[10px] text-status-idle flex items-center gap-1"><AlertTriangle size={10} /> Nearing limit — upgrade to add more</p>}
               </div>
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground flex items-center gap-1.5"><HardDrive size={14} /> Storage</span>
                   <span className="text-foreground font-medium">{currentPlan.storageUsed}/{currentPlan.storageMax} GB</span>
                 </div>
                 <Progress value={storagePct} className="h-2" />
-              </div>
-              <div className="space-y-2">
+              </div> */}
+              {/* <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground flex items-center gap-1.5"><Camera size={14} /> Screenshots</span>
                   <span className="text-foreground font-medium">{currentPlan.screenshotRate}</span>
                 </div>
                 <Progress value={100} className="h-2" />
                 <p className="text-[10px] text-muted-foreground">Max rate for this plan</p>
-              </div>
+              </div> */}
             </div>
 
             {/* Plan Actions */}
@@ -383,7 +383,7 @@ axios.get(`${API}/api/company/details`, { headers });
           </motion.div>
 
           {/* Payment Timeline */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="rounded-xl bg-gradient-card border border-border p-5">
+          {/* <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="rounded-xl bg-gradient-card border border-border p-5">
             <h2 className="font-semibold text-foreground text-sm mb-4 flex items-center gap-2">
               <Clock size={14} className="text-primary" /> Payment Timeline
             </h2>
@@ -409,10 +409,10 @@ axios.get(`${API}/api/company/details`, { headers });
                 ))}
               </div>
             </div>
-          </motion.div>
+          </motion.div> */}
 
           {/* Invoices */}
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="rounded-xl bg-gradient-card border border-border">
+          {/* <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="rounded-xl bg-gradient-card border border-border">
             <div className="p-4 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Receipt size={16} className="text-primary" />
@@ -462,7 +462,7 @@ axios.get(`${API}/api/company/details`, { headers });
                 </Button>
               </div>
             )}
-          </motion.div>
+          </motion.div> */}
 
           {/* Upgrade/Downgrade Dialog */}
           <Dialog open={!!upgradeDialog} onOpenChange={() => setUpgradeDialog(null)}>

@@ -20,11 +20,11 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 const Screenshots = () => {
   const { token, user } = useAuth();
-  const { can, role } = usePermissions();
+  const { can, role, canAction } = usePermissions();
   const isAdmin =
-    can("manage_team") ||
     role === "company_admin" ||
-    role === "sub_admin";
+    role === "sub_admin" ||
+    (role === "custom" && canAction("screenshots"));
 
   const [screenshots, setScreenshots] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

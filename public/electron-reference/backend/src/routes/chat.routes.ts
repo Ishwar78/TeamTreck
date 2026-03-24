@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { Chat } from "../models/Chat";
 import { User } from "../models/User";
+import { Group } from "../models/Group";
 import { authenticate } from "../middleware/auth";
 
 const router = Router();
@@ -27,10 +28,27 @@ router.get("/admin", authenticate, async (req: any, res) => {
 /* ================= SEND MESSAGE ================= */
 router.post("/send", authenticate, async (req: any, res) => {
   try {
-    const { receiver, message } = req.body;
+    const { receiver, groupId, message } = req.body;
 
     const senderId = req.auth.user_id;
     const companyId = req.auth.company_id;
+
+    // ✅ GROUP CHECK
+    if (groupId) {
+      const group = await Group.findById(groupId);
+      if (!group || String(group.company_id) !== String(companyId)) {
+        return res.status(403).json({ success: false, message: "Invalid group" });
+      }
+
+      const chat = await Chat.create({
+        sender: senderId,
+        group_id: groupId,
+        message,
+        company_id: companyId,
+      });
+
+      return res.json({ success: true, chat });
+    }
 
     const receiverUser = await User.findById(receiver);
 
@@ -82,6 +100,35 @@ router.get("/:userId", authenticate, async (req: any, res) => {
         { sender: userId, receiver: myId }
       ]
     }).sort({ createdAt: 1 });
+
+    res.json({ success: true, messages });
+
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+/* ================= GET GROUP MESSAGES ================= */
+router.get("/group/:groupId", authenticate, async (req: any, res) => {
+  try {
+    const groupId = req.params.groupId;
+    const companyId = req.auth.company_id;
+
+    const group = await Group.findById(groupId);
+
+    if (!group || String(companyId) !== String(group.company_id)) {
+      return res.status(403).json({ success: false });
+    }
+
+    if (req.auth.role === "employee" || req.auth.role === "user") {
+      if (!group.users.includes(req.auth.user_id)) {
+        return res.status(403).json({ success: false });
+      }
+    }
+
+    const messages = await Chat.find({ group_id: groupId })
+      .populate("sender", "name")
+      .sort({ createdAt: 1 });
 
     res.json({ success: true, messages });
 

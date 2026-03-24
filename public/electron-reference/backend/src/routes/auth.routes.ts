@@ -71,7 +71,9 @@ authRoutes.post(
       const user = await User.findOne({
         email: email.toLowerCase(),
         status: "active",
-      }).select("+password_hash");
+      })
+      .select("+password_hash")
+      .populate("custom_role_id");
 
       if (!user) throw new AppError("Invalid credentials", 401);
 
@@ -167,6 +169,7 @@ authRoutes.post(
           role: user.role,
           company_id: user.company_id || null,
           companyName: company?.name || null,
+          customPermissions: user.custom_role_id ? (user.custom_role_id as any).permissions : undefined,
         },
       });
     } catch (err) {
