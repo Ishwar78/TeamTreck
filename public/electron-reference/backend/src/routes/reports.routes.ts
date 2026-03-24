@@ -4,6 +4,8 @@ import { requireRole } from '../middleware/roleGuard';
 import { Session } from '../models/Session';
 import { User } from '../models/User';
 import { ActivityLog } from '../models/ActivityLog';
+import { Company } from '../models/Company';
+import { sendAttendanceReportEmail } from '../services/mail.service';
 import { Types } from 'mongoose';
 
 const router = Router();
@@ -355,6 +357,42 @@ router.get('/attendance', authenticate, async (req: any, res, next) => {
         }));
 
         res.json({ success: true, data: populated });
+
+    } catch (err) {
+        next(err);
+    }
+});
+
+// POST /attendance/send-email - Send report via email
+router.post('/attendance/send-email', authenticate, requireRole('company_admin', 'sub_admin', 'custom'), async (req: any, res, next) => {
+    try {
+        const { userId, startDate, endDate, periodDisplay, stats } = req.body;
+        const companyId = new Types.ObjectId(req.auth.company_id as string);
+
+        if (!userId || !startDate || !endDate) {
+            throw new Error('User ID and date range are required');
+        }
+
+        const user = await User.findById(userId).select('name email').lean();
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        const company = await Company.findById(companyId).select('name').lean();
+        if (!company) {
+            throw new Error('Company not found');
+        }
+
+        // Send email
+        await sendAttendanceReportEmail(
+            user.email,
+            user.name,
+            company.name,
+            periodDisplay,
+            stats
+        );
+
+        res.json({ success: true, message: 'Report sent successfully' });
 
     } catch (err) {
         next(err);

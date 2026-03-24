@@ -68,6 +68,7 @@ import { connectDatabase } from './config/database';
 // import { connectRedis } from './config/redis';
 import { initWebSocket } from './services/websocket.service';
 import { logger } from './utils/logger';
+import { initCleanupService } from './services/cleanup.service';
 
 async function bootstrap(): Promise<void> {
   // Connect infrastructure
@@ -77,6 +78,9 @@ async function bootstrap(): Promise<void> {
   // Create HTTP server + attach Socket.IO
   const server = http.createServer(app);
   initWebSocket(server);
+
+  // Initialize background services
+  initCleanupService();
 
   server.listen(env.PORT, () => {
     logger.info(`🚀 TeamTreck API running on port ${env.PORT} [${env.NODE_ENV}]`);

@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { Users, ChevronLeft, ChevronRight, Calendar, Mail } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, subWeeks, addWeeks, subMonths, addMonths, subDays, addDays as addDay, eachDayOfInterval, startOfDay, endOfDay } from "date-fns";
 
 type ViewMode = "day" | "week" | "month" | "dateRange";
@@ -51,6 +52,8 @@ const Attendance = () => {
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [attendanceData, setAttendanceData] = useState<AttendanceData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (token && user?.id) {
@@ -209,6 +212,38 @@ const Attendance = () => {
     }
   };
 
+  const handleSendEmail = async () => {
+    if (!selectedUser || selectedUser === "all") return;
+    
+    setSendingEmail(true);
+    try {
+      await apiFetch("/api/reports/attendance/send-email", token, {
+        method: "POST",
+        body: JSON.stringify({
+          userId: selectedUser,
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          periodDisplay: displayRange,
+          stats: stats
+        })
+      });
+
+      toast({
+        title: "Success",
+        description: `Attendance report has been sent to the user's email.`,
+      });
+    } catch (err: any) {
+      console.error("Failed to send email:", err);
+      toast({
+        title: "Error",
+        description: err.message || "Failed to send email report.",
+        variant: "destructive"
+      });
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
   const getHourColor = (status: string) => {
     switch (status) {
       case "Active":
@@ -289,6 +324,22 @@ const Attendance = () => {
                   </Select>
                 </div>
               )}
+
+              {/* Mail Report Button (Admin Only, User Selected) */}
+              {isAdmin && selectedUser && selectedUser !== "all" && (
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleSendEmail} 
+                    disabled={sendingEmail}
+                    className="gap-2 border-primary/30 hover:border-primary/50 text-primary"
+                  >
+                    <Mail size={14} />
+                    {sendingEmail ? "Sending..." : "Send Report"}
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* View Mode Tabs */}
@@ -342,15 +393,16 @@ const Attendance = () => {
               {/* Detailed Timeline Table */}
               <Card className="overflow-hidden border-border bg-card">
                 <CardContent className="p-0 overflow-x-auto">
-                  <Table className="min-w-[600px]">
+                  {/* <Table className="min-w-[600px]"> */}
+                  <Table className="w-full table-fixed">
                     <TableHeader>
                       <TableRow className="bg-primary hover:bg-primary/90">
-                        <TableHead className="text-white font-semibold">Start</TableHead>
-                        <TableHead className="text-white font-semibold">End</TableHead>
-                        <TableHead className="text-white font-semibold">Type</TableHead>
-                        <TableHead className="text-white font-semibold">Duration</TableHead>
-                        <TableHead className="text-white font-semibold">Reason</TableHead>
-                        <TableHead className="text-white font-semibold">Status</TableHead>
+                       <TableHead className="text-white font-semibold w-[25%]">Start</TableHead>
+<TableHead className="text-white font-semibold w-[25%]">End</TableHead>
+<TableHead className="text-white font-semibold w-[25%]">Type</TableHead>
+<TableHead className="text-white font-semibold w-[25%] text-right">Duration</TableHead>
+                        {/* <TableHead className="text-white font-semibold">Reason</TableHead>
+                        <TableHead className="text-white font-semibold">Status</TableHead> */}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -361,9 +413,9 @@ const Attendance = () => {
                           <TableCell className={segment.type === 'Work' ? "text-foreground font-medium" : "text-yellow-500 font-medium"}>
                             {segment.type}
                           </TableCell>
-                          <TableCell className="font-mono text-sm">{segment.duration}</TableCell>
-                          <TableCell className="text-muted-foreground"></TableCell>
-                          <TableCell className="text-muted-foreground"></TableCell>
+                         <TableCell className="font-mono text-sm text-right pr-4"> {segment.duration}</TableCell>
+                          {/* <TableCell className="text-muted-foreground"></TableCell>
+                          <TableCell className="text-muted-foreground"></TableCell> */}
                         </TableRow>
                       )) || (
                           <TableRow>
