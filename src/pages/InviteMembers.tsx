@@ -15,6 +15,7 @@ import { apiFetch } from "@/lib/api";
 
 const roles = [
   { value: "employee", label: "Employee", desc: "Desktop tracking only" },
+   { value: "intern", label: "Intern", desc: "Limited access / trainee" },
   // { value: "sub_admin", label: "Sub-Admin", desc: "View reports & screenshots" },
   // { value: "company_admin", label: "Admin", desc: "Full company control" },
 ];
@@ -23,7 +24,7 @@ const roles = [
 const InviteMembers = () => {
   const { token, user } = useAuth();
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("user");
+  const [role, setRole] = useState("employee");
   const [workingHours, setWorkingHours] = useState("9:00 AM to 6:00 PM");
   const [invites, setInvites] = useState<any[]>([]);
   const [planLimits, setPlanLimits] = useState({ name: "...", maxUsers: 0, currentUsers: 0 });

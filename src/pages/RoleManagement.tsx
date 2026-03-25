@@ -269,6 +269,7 @@ const RoleManagement = () => {
                               <option value="company_admin">Company Admin</option>
                               <option value="sub_admin">Sub Admin</option>
                               <option value="employee">Employee</option>
+                              <option value="intern">Intern</option>
                               <option value="user">User</option>
                             </optgroup>
                             
@@ -390,6 +391,7 @@ const RoleManagement = () => {
                   <optgroup label="Default System Roles">
                     <option value="sub_admin">Sub Admin</option>
                     <option value="employee">Employee</option>
+                    <option value="intern">Intern</option>
                     <option value="user">User</option>
                   </optgroup>
                   {customRoles.length > 0 && (

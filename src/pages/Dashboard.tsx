@@ -36,7 +36,7 @@ const Dashboard = () => {
     );
 
   // Render Employee Dashboard if role is employee
-  if (user?.role === 'employee' || user?.role === 'user') {
+  if (user?.role === 'employee' || user?.role === 'user' || user?.role === 'intern') {
     return <EmployeeDashboard />;
   }
 

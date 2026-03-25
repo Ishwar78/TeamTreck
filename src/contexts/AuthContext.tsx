@@ -12,6 +12,7 @@ export type AppRole =
   | "sub_admin"
   | "user"
   | "employee"
+  | "intern"
   | "custom";
 
 interface AuthUser {

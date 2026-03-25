@@ -6,7 +6,7 @@ export interface IUser extends Document {
   password_hash: string;
   name: string;
   phone?: string;
-  role: 'super_admin' | 'company_admin' | 'sub_admin' | 'user' | 'employee' | 'custom';
+  role: 'super_admin' | 'company_admin' | 'sub_admin' | 'user' | 'employee' |'intern'| 'custom';
   custom_role_id?: Types.ObjectId;
   devices: Array<{
     device_id: string;
@@ -62,7 +62,7 @@ const UserSchema = new Schema<IUser>(
 
     role: {
       type: String,
-      enum: ['super_admin', 'company_admin', 'sub_admin', 'user', 'employee', 'custom'],
+      enum: ['super_admin', 'company_admin', 'sub_admin', 'user', 'employee','intern', 'custom'],
       default: 'user',
     },
 

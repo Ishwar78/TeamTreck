@@ -120,7 +120,7 @@ router.get("/group/:groupId", authenticate, async (req: any, res) => {
       return res.status(403).json({ success: false });
     }
 
-    if (req.auth.role === "employee" || req.auth.role === "user") {
+    if (req.auth.role === "employee" || req.auth.role === "user" || req.auth.role === "intern") {
       if (!group.users.includes(req.auth.user_id)) {
         return res.status(403).json({ success: false });
       }

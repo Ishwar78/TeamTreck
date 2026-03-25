@@ -235,8 +235,8 @@ router.get('/attendance', authenticate, async (req: any, res, next) => {
 
         if (userId) {
             query.user_id = new Types.ObjectId(userId as string);
-        } else if (req.auth.role === 'employee') {
-            // Employees can only see their own attendance
+        } else if (req.auth.role === 'employee' || req.auth.role === 'intern' || req.auth.role === 'user') {
+            // Employees, interns and standard users can only see their own attendance
             query.user_id = new Types.ObjectId(req.auth.user_id as string);
         }
 

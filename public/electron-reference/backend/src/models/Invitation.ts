@@ -3,17 +3,18 @@ import mongoose, { Schema, Document, Types } from 'mongoose';
 export interface IInvitation extends Document {
     email: string;
     company_id: Types.ObjectId;
-    role: 'admin' | 'sub_admin' | 'user' | 'employee';
+    role: 'admin' | 'sub_admin' | 'user' | 'employee' | 'intern';
     token: string;
     status: 'pending' | 'accepted' | 'expired';
     workingHours?: string;
     expiresAt: Date;
-}
+} 
 
 const InvitationSchema = new Schema<IInvitation>({
     email: { type: String, required: true, trim: true, lowercase: true },
     company_id: { type: Schema.Types.ObjectId, ref: 'Company', required: true },
-    role: { type: String, enum: ['admin', 'sub_admin', 'user', 'employee'], default: 'user' },
+    role: { type: String, enum: ['admin', 'sub_admin', 'user', 'employee','intern'], default: 'user' },
+
     token: { type: String, required: true, unique: true },
     status: { type: String, enum: ['pending', 'accepted', 'expired'], default: 'pending' },
     workingHours: { type: String, default: "9:00 AM to 6:00 PM" },

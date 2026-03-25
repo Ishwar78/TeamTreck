@@ -91,12 +91,19 @@ router.get(
   "/:userId",
   authenticate,
   enforceTenant,
-  requireRole("company_admin", "sub_admin"),
   async (req, res, next) => {
     try {
+      const targetUserId = req.params.userId;
+      const isAdmin = req.auth!.role === 'company_admin' || req.auth!.role === 'sub_admin' || req.auth!.role === 'super_admin' || req.auth!.role === 'custom';
+
+      // If not admin, can only see OWN screenshots
+      if (!isAdmin && targetUserId !== req.auth!.user_id) {
+        throw new AppError("Insufficient permissions", 403);
+      }
+
       const screenshots = await Screenshot.find({
         company_id: req.auth!.company_id,
-        user_id: req.params.userId,
+        user_id: targetUserId,
       })
         .sort({ timestamp: -1 })
         .lean();

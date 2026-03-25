@@ -12,8 +12,8 @@ router.get('/', authenticate, async (req, res, next) => {
     const { role, company_id, user_id } = req.auth!;
     let query: any = { company_id };
 
-    // Users and employees only see their own tasks
-    if (role === 'user' || role === 'employee') {
+    // Users, employees and interns only see their own tasks
+    if (role === 'user' || role === 'employee' || role === 'intern') {
       query.assignedTo = user_id;
     }
 
@@ -65,7 +65,7 @@ router.patch('/:id/status', authenticate, async (req, res, next) => {
     
     if (!task) throw new AppError('Task not found', 404);
     
-    if ((req.auth!.role === 'user' || req.auth!.role === 'employee') && task.assignedTo.toString() !== req.auth!.user_id) {
+    if ((req.auth!.role === 'user' || req.auth!.role === 'employee' || req.auth!.role === 'intern') && task.assignedTo.toString() !== req.auth!.user_id) {
       throw new AppError('Not authorized', 403);
     }
 

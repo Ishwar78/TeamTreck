@@ -118,7 +118,12 @@ router.post('/', validate(schema), async (req, res) => {
 ======================================================= */
 
 router.get('/timeline', async (req, res) => {
-  const { user_id, start_date, end_date } = req.query;
+  let { user_id, start_date, end_date } = req.query;
+
+  // Employees, interns and standard users can only see their own timeline
+  if (req.auth!.role === 'employee' || req.auth!.role === 'intern' || req.auth!.role === 'user') {
+    user_id = req.auth!.user_id;
+  }
 
   const logs = await ActivityLog.find({
     user_id,
@@ -188,8 +193,15 @@ router.get('/usage', async (req, res, next) => {
       timestamp: { $gte: startDate }
     };
 
+    const isAdmin = req.auth!.role === 'company_admin' || req.auth!.role === 'sub_admin' || req.auth!.role === 'super_admin' || req.auth!.role === 'custom';
+    
     if (userId && userId !== 'all') {
-      match.user_id = new Types.ObjectId(userId as string);
+      // If not admin, force their own ID
+      const targetUserId = isAdmin ? userId : req.auth!.user_id;
+      match.user_id = new Types.ObjectId(targetUserId as string);
+    } else if (!isAdmin) {
+      // If not admin and no userId/all, force their own ID
+      match.user_id = new Types.ObjectId(req.auth!.user_id as string);
     }
 
     /* ================= APPS ================= */

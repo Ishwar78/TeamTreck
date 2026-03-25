@@ -37,7 +37,7 @@ const ChatPage = () => {
       if (!token || !user) return;
 
       try {
-        if (user.role === "employee" || user.role === "user") {
+        if (user.role === "employee" || user.role === "user" || user.role === "intern") {
           // Employee: Fetch Admin
           const adminData = await apiFetch("/api/chat/admin", token);
           if (adminData?.admin) {
@@ -55,7 +55,7 @@ const ChatPage = () => {
           // Admin: Fetch Employees
           const usersData = await apiFetch("/api/company/users", token);
           if (usersData?.users) {
-            const employees = usersData.users.filter((u: any) => u.role === "employee");
+            const employees = usersData.users.filter((u: any) => u.role === "employee" || u.role === "intern");
             setUsers(employees);
           }
 
@@ -119,7 +119,7 @@ const ChatPage = () => {
     setText("");
   };
 
-  const isEmployeeDashboard = user?.role === "employee" || user?.role === "user";
+  const isEmployeeDashboard = user?.role === "employee" || user?.role === "user" || user?.role === "intern";
 
   const content = (
     <div className="flex h-[calc(100vh-80px)] mt-6 rounded-xl overflow-hidden bg-[#0b1220] border border-gray-800">
