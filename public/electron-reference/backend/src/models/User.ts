@@ -23,6 +23,8 @@ export interface IUser extends Document {
   updatedAt: Date;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  deletionOTP?: string;
+  deletionOTPExpires?: Date;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -102,6 +104,8 @@ const UserSchema = new Schema<IUser>(
     
     resetPasswordToken: String,
     resetPasswordExpires: Date,
+    deletionOTP: String,
+    deletionOTPExpires: Date,
   },
   { timestamps: true }
 );

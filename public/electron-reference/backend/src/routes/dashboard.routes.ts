@@ -4,6 +4,7 @@ import { requireRole } from '../middleware/roleGuard';
 import { Session } from '../models/Session';
 import { Screenshot } from '../models/Screenshot';
 import { ActivityLog } from '../models/ActivityLog';
+import { User } from '../models/User';
 
 export const dashboardRoutes = Router();
 
@@ -15,9 +16,15 @@ dashboardRoutes.get(
     try {
       const companyId = req.auth!.company_id;
 
-      const activeNow = await Session.countDocuments({
+      const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000);
+      const activeNow = await ActivityLog.distinct('user_id', {
         company_id: companyId,
-        status: 'active'
+        timestamp: { $gte: fiveMinsAgo }
+      }).then(uids => uids.length);
+
+      const totalUsers = await User.countDocuments({
+        company_id: companyId,
+        role: { $ne: 'super_admin' }
       });
 
       const screenshots = await Screenshot.countDocuments({
@@ -50,6 +57,7 @@ dashboardRoutes.get(
 
       res.json({
         activeNow,
+        totalUsers,
         screenshots,
         hoursToday: Math.round(hours[0]?.total || 0)
       });

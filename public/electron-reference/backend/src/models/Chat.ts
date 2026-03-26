@@ -21,8 +21,8 @@ const chatSchema = new mongoose.Schema(
     message: { type: String },
 
 // 🔥 NEW FIELDS
-    // fileUrl: { type: String },    
-    // fileType: { type: String },    
+    fileUrl: { type: String },    
+    fileType: { type: String },    
 
     seen: { type: Boolean, default: false },
 

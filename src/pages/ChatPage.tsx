@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, API_BASE } from "@/lib/api";
 import DashboardLayout from "@/components/DashboardLayout";
+import { Paperclip, Image as ImageIcon, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const ChatPage = () => {
   const { token, user } = useAuth();
@@ -11,6 +13,8 @@ const ChatPage = () => {
   const [activeChat, setActiveChat] = useState<{ id: string; name: string; type: "user" | "group" } | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -37,33 +41,27 @@ const ChatPage = () => {
       if (!token || !user) return;
 
       try {
-        if (user.role === "employee" || user.role === "user" || user.role === "intern") {
-          // Employee: Fetch Admin
-          const adminData = await apiFetch("/api/chat/admin", token);
-          if (adminData?.admin) {
-            setUsers([adminData.admin]);
-            setActiveChat({ id: adminData.admin._id, name: adminData.admin.name, type: "user" });
-            setTimeout(() => loadMessages({ id: adminData.admin._id, type: "user" }), 100);
+        // Fetch Peers (Fellow group members + Admin)
+        const peersData = await apiFetch("/api/chat/peers", token);
+        if (peersData?.users) {
+          setUsers(peersData.users);
+          
+          // Auto-select first chat if none active
+          if (!activeChat && peersData.users.length > 0) {
+            const first = peersData.users[0];
+            setActiveChat({ id: first._id, name: first.name, type: "user" });
+            loadMessages({ id: first._id, type: "user" });
           }
+        }
 
-          // Employee: Fetch Groups
-          const groupsData = await apiFetch("/api/company/my-groups", token);
-          if (groupsData?.groups) {
-            setGroups(groupsData.groups);
-          }
-        } else {
-          // Admin: Fetch Employees
-          const usersData = await apiFetch("/api/company/users", token);
-          if (usersData?.users) {
-            const employees = usersData.users.filter((u: any) => u.role === "employee" || u.role === "intern");
-            setUsers(employees);
-          }
-
-          // Admin: Fetch Groups
-          const groupsData = await apiFetch("/api/company/groups", token);
-          if (groupsData?.groups) {
-            setGroups(groupsData.groups);
-          }
+        // Fetch Groups (Admin sees all, others see joining)
+        const groupsEndpoint = (user.role === "company_admin" || user.role === "sub_admin") 
+          ? "/api/company/groups" 
+          : "/api/company/my-groups";
+          
+        const groupsData = await apiFetch(groupsEndpoint, token);
+        if (groupsData?.groups) {
+          setGroups(groupsData.groups);
         }
       } catch (err) {
         console.error("FETCH ERROR:", err);
@@ -85,23 +83,28 @@ const ChatPage = () => {
   }, [activeChat]);
 
   /* ================= SEND MESSAGE ================= */
-  const sendMessage = async () => {
-    if (!text.trim() || !activeChat) return;
+  const sendMessage = async (fileData?: { url: string, type: string }) => {
+    if (!text.trim() && !fileData && !activeChat) return;
 
     const newMsg = {
-      sender: { _id: user?.id, name: user?.name }, // Optimistic populate format
+      sender: { _id: user?.id, name: user?.name },
       message: text,
+      fileUrl: fileData?.url,
+      fileType: fileData?.type
     };
 
-    // instant UI
     setMessages((prev) => [...prev, newMsg]);
 
     try {
-      const body: any = { message: text };
-      if (activeChat.type === "group") {
-        body.groupId = activeChat.id;
+      const body: any = { 
+        message: text,
+        fileUrl: fileData?.url,
+        fileType: fileData?.type
+      };
+      if (activeChat!.type === "group") {
+        body.groupId = activeChat!.id;
       } else {
-        body.receiver = activeChat.id;
+        body.receiver = activeChat!.id;
       }
 
       await apiFetch("/api/chat/send", token, {
@@ -109,14 +112,40 @@ const ChatPage = () => {
         body,
       });
 
-      // reload after send
-      loadMessages(activeChat);
-
+      loadMessages(activeChat!);
     } catch (err) {
       console.error("SEND ERROR:", err);
     }
 
     setText("");
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch(`${API_BASE}/api/chat/upload`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        },
+        body: formData
+      });
+      const data = await response.json();
+      if (data.success) {
+        sendMessage({ url: data.fileUrl, type: data.fileType });
+      }
+    } catch (err) {
+      console.error("UPLOAD ERROR:", err);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const isEmployeeDashboard = user?.role === "employee" || user?.role === "user" || user?.role === "intern";
@@ -129,7 +158,7 @@ const ChatPage = () => {
         
         {/* DIRECT MESSAGES */}
         <div className="p-3 text-gray-400 text-xs mt-2 uppercase">
-          {isEmployeeDashboard ? "Admin" : "Employees"}
+          {isEmployeeDashboard ? "Team" : "Employees"}
         </div>
         
         {users.map((u) => (
@@ -212,15 +241,37 @@ const ChatPage = () => {
                     {senderName}
                   </span>
                 )}
-                <div
-                  className={`px-4 py-2 rounded-xl max-w-xs ${
-                    isMe
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-700 text-gray-200"
-                  }`}
-                >
-                  {m.message}
-                </div>
+                  <div
+                    className={`rounded-xl max-overflow-hidden ${
+                      isMe
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-700 text-gray-200"
+                    } ${m.fileUrl ? "p-1" : "px-4 py-2"} max-w-xs`}
+                  >
+                    {m.fileUrl && (
+                      <div className="mb-1">
+                        {m.fileType?.startsWith("image/") ? (
+                          <img 
+                            src={`${API_BASE}${m.fileUrl}`} 
+                            alt="Chat attachment" 
+                            className="rounded-lg max-w-full h-auto cursor-pointer hover:opacity-90 min-h-[100px]"
+                            onClick={() => window.open(`${API_BASE}${m.fileUrl}`, '_blank')}
+                          />
+                        ) : (
+                          <a 
+                            href={`${API_BASE}${m.fileUrl}`} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="flex items-center gap-2 p-2 hover:bg-white/10 rounded"
+                          >
+                            <Paperclip size={16} />
+                            <span className="text-sm underline truncate">Attachment</span>
+                          </a>
+                        )}
+                      </div>
+                    )}
+                    {m.message && <div>{m.message}</div>}
+                  </div>
               </div>
             );
           })}
@@ -230,17 +281,33 @@ const ChatPage = () => {
 
         {/* INPUT */}
         {activeChat && (
-          <div className="p-3 border-t border-gray-800 flex gap-2 bg-[#0f172a]">
+          <div className="p-3 border-t border-gray-800 flex gap-2 bg-[#0f172a] items-center">
             <input
-              className="flex-1 bg-gray-800 text-white px-3 py-2 rounded outline-none"
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden"
+              accept="image/*,application/pdf"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition"
+              title="Attach File"
+            >
+              <Paperclip size={20} className={uploading ? "animate-pulse" : ""} />
+            </button>
+            <input
+              className="flex-1 bg-gray-800 text-white px-3 py-2 rounded outline-none border border-transparent focus:border-blue-500/50 transition"
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Type message..."
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             />
             <button
-              onClick={sendMessage}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5 rounded"
+              onClick={() => sendMessage()}
+              disabled={!text.trim() && !uploading}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-5 py-2 rounded transition font-medium"
             >
               Send
             </button>

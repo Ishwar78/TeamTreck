@@ -56,7 +56,6 @@ const SuperAdminSidebar = () => {
       <div className="flex items-center justify-between p-4 border-b border-border">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center font-bold text-primary-foreground text-xs">W</div>
             <div>
               <span className="font-bold text-foreground text-sm block leading-tight">MULTICLOUT</span>
               <span className="text-xs text-primary">Super Admin</span>

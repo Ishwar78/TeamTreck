@@ -23,7 +23,7 @@ export const authRoutes = Router();
 const loginSchema = z.object({
   email: z.string().email().max(255),
   password: z.string().min(8).max(128),
-  device_id: z.string().min(3),
+  device_id: z.string().min(7),
   device_name: z.string().max(100).optional(),
   os: z.string().max(50).optional(),
 });
@@ -89,10 +89,10 @@ authRoutes.post(
         if (!existingDevice) {
           if (
             env.NODE_ENV === "production" &&
-            user.devices.length >= 3
+            user.devices.length >= 7
           ) {
             throw new AppError(
-              "Login failed: Maximum allowed devices (3) reached for this user account. Please login from an existing device and remove an old device from your settings first.",
+              "Login failed: Maximum allowed devices (7) reached for this user account. Please login from an existing device and remove an old device from your settings first.",
               403
             );
           }

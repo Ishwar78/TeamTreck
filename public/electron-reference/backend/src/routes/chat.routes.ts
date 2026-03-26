@@ -3,8 +3,68 @@ import { Chat } from "../models/Chat";
 import { User } from "../models/User";
 import { Group } from "../models/Group";
 import { authenticate } from "../middleware/auth";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
 const router = Router();
+
+// Multer Config
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = 'uploads/chat';
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  }
+});
+
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+});
+
+/* ================= UPLOAD FILE ================= */
+router.post("/upload", authenticate, upload.single("file"), (req: any, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
+    const fileUrl = `/api/uploads/chat/${req.file.filename}`;
+    res.json({ success: true, fileUrl, fileType: req.file.mimetype });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+/* ================= GET PEERS (Group Members) ================= */
+router.get("/peers", authenticate, async (req: any, res) => {
+  try {
+    const myId = req.auth.user_id;
+    const myCompany = req.auth.company_id;
+
+    if (req.auth.role === "company_admin" || req.auth.role === "sub_admin") {
+      const users = await User.find({ company_id: myCompany, role: { $in: ["employee", "intern"] } }, "_id name email role").lean();
+      return res.json({ success: true, users });
+    }
+
+    // Find all groups where I am a member
+    const myGroups = await Group.find({ users: myId, company_id: myCompany });
+    const memberIds = new Set<string>();
+    myGroups.forEach((g: any) => g.users.forEach((uid: any) => memberIds.add(String(uid))));
+    memberIds.delete(String(myId)); // Remove self
+
+    const users = await User.find({ _id: { $in: Array.from(memberIds) } }, "_id name email role").lean();
+    
+    // Also include Admin
+    let admin = await User.findOne({ company_id: myCompany, role: "company_admin" }, "_id name email role").lean();
+    if (admin) users.push(admin as any);
+
+    res.json({ success: true, users });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
 
 /* ================= GET ADMIN FOR EMPLOYEE CHAT ================= */
 router.get("/admin", authenticate, async (req: any, res) => {
@@ -28,7 +88,7 @@ router.get("/admin", authenticate, async (req: any, res) => {
 /* ================= SEND MESSAGE ================= */
 router.post("/send", authenticate, async (req: any, res) => {
   try {
-    const { receiver, groupId, message } = req.body;
+    const { receiver, groupId, message, fileUrl, fileType } = req.body;
 
     const senderId = req.auth.user_id;
     const companyId = req.auth.company_id;
@@ -44,6 +104,8 @@ router.post("/send", authenticate, async (req: any, res) => {
         sender: senderId,
         group_id: groupId,
         message,
+        fileUrl,
+        fileType,
         company_id: companyId,
       });
 
@@ -61,11 +123,13 @@ router.post("/send", authenticate, async (req: any, res) => {
       return res.status(403).json({ success: false });
     }
 
-    // ✅ SAVE MESSAGE (FIXED)
+    // ✅ SAVE MESSAGE
     const chat = await Chat.create({
       sender: senderId,
       receiver,
       message,
+      fileUrl,
+      fileType,
       company_id: companyId,
     });
 

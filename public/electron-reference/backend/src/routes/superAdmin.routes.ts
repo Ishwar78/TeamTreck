@@ -11,6 +11,13 @@ import { sendCompanyCreatedEmail } from '../services/mail.service';
 import { SupportTicket } from '../models/SupportTicket';
 const router = Router();
 
+/* ================= HELPER ================= */
+const getNextBillingDate = (date = new Date()) => {
+  const next = new Date(date);
+  next.setMonth(next.getMonth() + 1);
+  return next;
+};
+
 /* ================= PLANS ================= */
 
 // GET Plans
@@ -112,7 +119,10 @@ router.post('/company', authenticate, requireRole('super_admin'), async (req: Re
       country: country || 'US',
       mrr: plan.price_monthly,
       max_users: plan.max_users, // Cache it
-      subscription: { status: plan.price_monthly === 0 ? 'trialing' : 'active' } // Simple logic for now
+      subscription: { 
+        status: plan.price_monthly === 0 ? 'trialing' : 'active',
+        current_period_end: getNextBillingDate() 
+      } 
     });
 
     const hashed = await bcrypt.hash(adminPassword, 10);
@@ -159,9 +169,12 @@ router.put('/companies/:id', authenticate, requireRole('super_admin'), async (re
     }
 
     if (status) { // map frontend status to subscription status
-      if (status === 'active') update['subscription.status'] = 'active';
-      if (status === 'suspended') update['subscription.status'] = 'canceled'; // or similar
-      // For simplicity
+      if (status === 'active') {
+        update['subscription.status'] = 'active';
+        // If activating, set expiry to same day next month
+        update['subscription.current_period_end'] = getNextBillingDate();
+      }
+      if (status === 'suspended') update['subscription.status'] = 'canceled';
     }
 
     await Company.findByIdAndUpdate(req.params.id, update);

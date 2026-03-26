@@ -11,8 +11,16 @@ import { AppError } from '../utils/errors';
 import { authenticate } from '../middleware/auth';
 import { requireRole } from '../middleware/roleGuard'; 
 import { CustomRole } from '../models/CustomRole';
+import { sendDeletionOTPEmail } from '../services/mail.service';
 
 const router = Router();
+
+/* ================= HELPER ================= */
+const getNextBillingDate = (date = new Date()) => {
+  const next = new Date(date);
+  next.setMonth(next.getMonth() + 1);
+  return next;
+};
 
 /* ================= REGISTER ================= */
 
@@ -135,8 +143,13 @@ router.get(
   requireRole('company_admin', 'sub_admin'),
   async (req, res, next) => {
     try {
-      const company = await Company.findById(req.auth!.company_id).populate('plan_id').lean();
+      const company: any = await Company.findById(req.auth!.company_id).populate('plan_id').lean();
       if (!company) throw new AppError('Company not found', 404);
+
+      // ✅ Fallback for missing expiry date
+      if (company.subscription && !company.subscription.current_period_end) {
+        company.subscription.current_period_end = getNextBillingDate(company.created_at);
+      }
 
       res.json({ success: true, company });
     } catch (err) {
@@ -566,6 +579,61 @@ router.delete('/roles/:id', authenticate, requireRole('company_admin'), async (r
     if (!role) throw new AppError('Role not found', 404);
     res.json({ success: true, message: 'Role deleted' });
   } catch (err) { next(err); }
+});
+
+/* ================= DELETE USERS WITH OTP ================= */
+
+router.post('/users/delete-request', authenticate, requireRole('company_admin'), async (req, res, next) => {
+  try {
+    const admin = await User.findById(req.auth!.user_id);
+    if (!admin) throw new AppError('Admin not found', 404);
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    admin.deletionOTP = otp;
+    admin.deletionOTPExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+    await admin.save();
+
+    const company = await Company.findById(req.auth!.company_id);
+    await sendDeletionOTPEmail(admin.email, otp, company?.name || 'TeamTreck', admin.name);
+
+    res.json({ success: true, message: 'OTP sent to your email' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/users/bulk-delete', authenticate, requireRole('company_admin'), async (req, res, next) => {
+  try {
+    const { userIds, otp } = req.body;
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      throw new AppError('No users selected', 400);
+    }
+    if (!otp) throw new AppError('OTP is required', 400);
+
+    const admin = await User.findById(req.auth!.user_id);
+    if (!admin || !admin.deletionOTP || admin.deletionOTP !== otp || (admin.deletionOTPExpires && admin.deletionOTPExpires < new Date())) {
+      throw new AppError('Invalid or expired OTP', 400);
+    }
+
+    // Security: Ensure admin doesn't delete themselves
+    const filteredIds = userIds.filter(id => id !== req.auth!.user_id);
+    
+    // Security: Only delete users within the same company
+    await User.deleteMany({
+      _id: { $in: filteredIds },
+      company_id: req.auth!.company_id,
+      role: { $ne: 'super_admin' }
+    });
+
+    // Clear OTP after success
+    admin.deletionOTP = undefined;
+    admin.deletionOTPExpires = undefined;
+    await admin.save();
+
+    res.json({ success: true, message: `Successfully deleted ${filteredIds.length} users` });
+  } catch (err) {
+    next(err);
+  }
 });
 
 export const companyRoutes = router;

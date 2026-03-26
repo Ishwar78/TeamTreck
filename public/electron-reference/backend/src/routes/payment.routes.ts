@@ -6,6 +6,16 @@ import { Company } from '../models/Company';
 
 const router = Router();
 
+/* ================= HELPER ================= */
+
+// ✅ Exact next month date (no fixed 30 days)
+const getNextBillingDate = () => {
+  const now = new Date();
+  const next = new Date(now);
+  next.setMonth(next.getMonth() + 1);
+  return next;
+};
+
 /* ================= GET KEY ================= */
 router.get('/key', (req, res) => {
   res.json({ key: process.env.RAZORPAY_KEY_ID || '' });
@@ -16,41 +26,27 @@ router.get('/key', (req, res) => {
 router.post('/create-order', async (req, res, next) => {
   try {
     const { planId, companyId } = req.body;
-    console.log('💳 Creating Razorpay order:', { planId, companyId });
 
     const plan = await Plan.findById(planId);
     if (!plan) {
-      console.error('❌ Plan not found:', planId);
       return res.status(404).json({ success: false, message: 'Plan not found' });
     }
 
-    console.log('📦 Plan details:', { name: plan.name, price: plan.price_monthly });
+    const order = await razorpay.orders.create({
+      amount: Math.round(plan.price_monthly * 100),
+      currency: 'INR',
+      receipt: `receipt_${Date.now()}`,
+    });
 
-    try {
-      const order = await razorpay.orders.create({
-        amount: Math.round(plan.price_monthly * 100),
-        currency: 'INR',
-        receipt: `receipt_${Date.now()}`,
-      });
+    // Save order id
+    await Company.findByIdAndUpdate(companyId, {
+      'subscription.razorpay_order_id': order.id,
+    });
 
-      console.log('✅ Razorpay order created:', order.id);
+    res.json({ success: true, order });
 
-      // Save temporary order to company
-      await Company.findByIdAndUpdate(companyId, {
-        'subscription.razorpay_order_id': order.id,
-      });
-
-      res.json({ success: true, order });
-    } catch (razorError: any) {
-      console.error('❌ Razorpay Error:', razorError);
-      return res.status(500).json({
-        success: false,
-        message: 'Razorpay order creation failed',
-        error: razorError.description || razorError.message
-      });
-    }
   } catch (err) {
-    console.error('❌ Create Order Unexpected Error:', err);
+    console.error(err);
     next(err);
   }
 });
@@ -67,6 +63,7 @@ router.post('/verify', async (req, res, next) => {
       planId
     } = req.body;
 
+    // 🔐 Verify signature
     const body = razorpay_order_id + '|' + razorpay_payment_id;
 
     const expectedSignature = crypto
@@ -83,7 +80,10 @@ router.post('/verify', async (req, res, next) => {
       return res.status(404).json({ success: false });
     }
 
-    // Activate subscription
+    const now = new Date();
+    const nextBilling = getNextBillingDate();
+
+    // ✅ Activate subscription
     await Company.findByIdAndUpdate(companyId, {
       plan_id: plan._id,
       max_users: plan.max_users,
@@ -93,13 +93,16 @@ router.post('/verify', async (req, res, next) => {
         razorpay_order_id,
         razorpay_payment_id,
         status: 'active',
-        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Adds 30 days
+        current_period_start: now,        // ✅ start date
+        current_period_end: nextBilling,  // ✅ FIXED expiry date
         cancel_at_period_end: false,
       },
     });
 
     res.json({ success: true });
+
   } catch (err) {
+    console.error(err);
     next(err);
   }
 });

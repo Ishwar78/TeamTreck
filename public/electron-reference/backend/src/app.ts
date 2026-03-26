@@ -67,6 +67,7 @@ app.use(
 
 /* ================= STATIC ================= */
 app.use("/uploads", express.static("uploads"));
+app.use("/api/uploads", express.static("uploads"));
 
 /* ================= RATE LIMIT ================= */
 app.use(rateLimiter);

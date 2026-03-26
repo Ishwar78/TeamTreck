@@ -20,7 +20,7 @@ import axios from "axios";
 const API = import.meta.env.VITE_API_BASE_URL;
 // Interfaces for fetched data
 interface Plan {
-  id: string;
+  id: string; 
   name: string;
   price: number;
   users: number;
@@ -45,7 +45,13 @@ interface CurrentPlanData {
   paymentMethod: string;
   autoRenew: boolean;
 }
-
+const formatDate = (date: string) => {
+  return new Date(date).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
 // const invoices = [
 //   { id: "INV-2026-02", date: "2026-02-12", amount: 99, status: "paid" as const, plan: "Professional", downloadUrl: "#" },
 //   { id: "INV-2026-01", date: "2026-01-12", amount: 99, status: "paid" as const, plan: "Professional", downloadUrl: "#" },
@@ -116,17 +122,24 @@ axios.get(`${API}/api/company/details`, { headers });
           name: p?.name || "Trial",
           price: p?.price_monthly || 0,
           cycle: "monthly",
-          nextBilling: c.subscription?.current_period_end ? new Date(c.subscription.current_period_end).toLocaleDateString() : "N/A",
+
+          nextBilling: c.subscription?.current_period_end 
+            ? formatDate(c.subscription.current_period_end)
+            : "N/A",
+
           maxUsers: c.max_users,
-          currentUsers: 0, // Ideally fetch this from /api/company/users/count if available, or just leave 0 for now
+          currentUsers: 0, 
           screenshotRate: "12/hr",
           storageUsed: 0,
           storageMax: 10,
           status: c.subscription?.status || "trialing",
-          startedAt: new Date(c.created_at).toLocaleDateString(),
+          startedAt: formatDate(c.created_at),
           paymentMethod: "Razorpay",
           autoRenew: c.subscription ? !c.subscription.cancel_at_period_end : true
         };
+
+        // Add raw date for expiry check
+        (planData as any).rawExpiry = c.subscription?.current_period_end;
 
         setCurrentPlan(planData);
         setAutoRenew(planData.autoRenew);
@@ -213,7 +226,7 @@ axios.get(`${API}/api/company/details`, { headers });
         key: key,
         amount: order.amount,
         currency: order.currency,
-        name: "TeamTracker",
+        name: "Multiclout",
         description: `Upgrade to ${plan.name}`,
         order_id: order.id,
         handler: async function (response: any) {
@@ -277,8 +290,19 @@ axios.get(`${API}/api/company/details`, { headers });
                     <CheckCircle2 size={10} className="mr-1" /> {currentPlan.status}
                   </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Started {currentPlan.startedAt} • Next billing {currentPlan.nextBilling}
+                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                  Started {currentPlan.startedAt} • 
+                  <span className={`flex items-center gap-1 ${
+                    currentPlan.status === 'active' && (currentPlan as any).rawExpiry && 
+                    (new Date((currentPlan as any).rawExpiry).getTime() - new Date().getTime()) < 7 * 24 * 60 * 60 * 1000
+                    ? "text-destructive font-medium animate-pulse" 
+                    : ""
+                  }`}>
+                    { (currentPlan as any).rawExpiry && (new Date((currentPlan as any).rawExpiry).getTime() < new Date().getTime()) ? "Expired on" : "Expires on" } {currentPlan.nextBilling}
+                    {currentPlan.status === 'active' && (currentPlan as any).rawExpiry && 
+                    (new Date((currentPlan as any).rawExpiry).getTime() - new Date().getTime()) < 7 * 24 * 60 * 60 * 1000 &&
+                    <AlertTriangle size={14} />}
+                  </span>
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   <CreditCard size={14} className="text-muted-foreground" />

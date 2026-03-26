@@ -9,9 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Mail, UserCheck, UserX, Edit2 } from "lucide-react";
+import { Users, Mail, UserCheck, UserX, Edit2, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const TeamManagement = () => {
   const { token } = useAuth();
@@ -26,6 +27,12 @@ const TeamManagement = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<any>(null);
   const [newWorkingHours, setNewWorkingHours] = useState("");
+
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isOTPRequesting, setIsOTPRequesting] = useState(false);
+  const [isOTPConfirmOpen, setIsOTPConfirmOpen] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [userIdsToDelete, setUserIdsToDelete] = useState<string[]>([]);
 
   useEffect(() => {
     if (token) fetchMembers();
@@ -84,6 +91,57 @@ const TeamManagement = () => {
     }
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredMembers.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredMembers.map(m => m._id));
+    }
+  };
+
+  const handleDeleteRequest = async (ids: string[]) => {
+    setIsOTPRequesting(true);
+    try {
+      const res = await apiFetch("/api/company/users/delete-request", token, {
+        method: "POST"
+      });
+      if (res.success) {
+        setUserIdsToDelete(ids);
+        setIsOTPConfirmOpen(true);
+        toast({ title: "OTP Sent", description: "Please check your email for the deletion code." });
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to request deletion", variant: "destructive" });
+    } finally {
+      setIsOTPRequesting(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!otp) return;
+    try {
+      const res = await apiFetch("/api/company/users/bulk-delete", token, {
+        method: "POST",
+        body: JSON.stringify({ userIds: userIdsToDelete, otp })
+      });
+      if (res.success) {
+        toast({ title: "Success", description: res.message });
+        setIsOTPConfirmOpen(false);
+        setSelectedIds([]);
+        setOtp("");
+        fetchMembers();
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to delete users", variant: "destructive" });
+    }
+  };
+
   if (loading)
     return (
       <div className="flex h-screen items-center justify-center">
@@ -107,12 +165,23 @@ const TeamManagement = () => {
             </p>
           </div>
 
-          {/* 🔍 SEARCH BAR */}
-          <div className="w-full sm:w-72">
+          {/* 🔍 SEARCH BAR & DELETE */}
+          <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-3 items-center">
+            {selectedIds.length > 0 && (
+              <Button 
+                variant="destructive" 
+                onClick={() => handleDeleteRequest(selectedIds)}
+                disabled={isOTPRequesting}
+                className="gap-2"
+              >
+                <Trash2 size={16} /> Delete Selected ({selectedIds.length})
+              </Button>
+            )}
             <Input
               placeholder="Search by name or email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              className="w-full sm:w-72"
             />
           </div>
         </div>
@@ -164,19 +233,30 @@ const TeamManagement = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox 
+                      checked={selectedIds.length === filteredMembers.length && filteredMembers.length > 0} 
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Working Hours</TableHead>
-                   
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
 
               <TableBody>
                 {filteredMembers.length > 0 ? (
                   filteredMembers.map((member) => (
-                    <TableRow key={member._id}>
+                    <TableRow key={member._id} className={selectedIds.includes(member._id) ? "bg-muted/50" : ""}>
+                      <TableCell>
+                        <Checkbox 
+                          checked={selectedIds.includes(member._id)} 
+                          onCheckedChange={() => toggleSelect(member._id)}
+                        />
+                      </TableCell>
                       <TableCell>{member.name}</TableCell>
                       <TableCell className="flex items-center gap-2">
                         <Mail size={14} />
@@ -193,22 +273,27 @@ const TeamManagement = () => {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex flex-col items-end gap-1">
+                        <div className="flex justify-end gap-2">
                           {canAction("team", "edit") && (
-                            <Button variant="outline" size="sm" onClick={() => handleEditClick(member)} className="gap-2">
-                              <Edit2 size={12} /> Edit Hours
+                            <Button variant="outline" size="sm" onClick={() => handleEditClick(member)} title="Edit Hours">
+                              <Edit2 size={12} />
                             </Button>
                           )}
-                          <span className="text-xs text-muted-foreground whitespace-nowrap">
-                            {member.workingHours || "9:00 AM to 6:00 PM"}
-                          </span>
+                          {canAction("team", "delete") && (
+                             <Button variant="destructive" size="sm" onClick={() => handleDeleteRequest([member._id])} disabled={isOTPRequesting} title="Delete Member">
+                              <Trash2 size={12} />
+                             </Button>
+                          )}
                         </div>
+                        <span className="text-[10px] text-muted-foreground block mt-1">
+                           {member.workingHours || "9:00 AM to 6:00 PM"}
+                        </span>
                       </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-6">
+                    <TableCell colSpan={6} className="text-center py-6">
                       No members found 😔
                     </TableCell>
                   </TableRow>
@@ -244,6 +329,41 @@ const TeamManagement = () => {
               </Button>
               <Button onClick={handleUpdateHours}>
                 Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        {/* OTP Deletion Dialog */}
+        <Dialog open={isOTPConfirmOpen} onOpenChange={setIsOTPConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-destructive flex items-center gap-2">
+                <Trash2 size={20} /> Confirm Deletion
+              </DialogTitle>
+              <DialogDescription>
+                This action is irreversible. You are about to delete {userIdsToDelete.length} member(s).
+                A 6-digit code has been sent to your email.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Enter 6-digit OTP</Label>
+                <Input
+                  type="text"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                  className="text-center text-2xl tracking-[1em] font-mono"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsOTPConfirmOpen(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleConfirmDelete} disabled={otp.length !== 6}>
+                Delete Permanently
               </Button>
             </DialogFooter>
           </DialogContent>

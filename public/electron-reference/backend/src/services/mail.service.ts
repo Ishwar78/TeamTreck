@@ -313,3 +313,79 @@ export const sendAttendanceReportEmail = async (
     throw error;
   }
 };
+export const sendDeletionOTPEmail = async (
+  email: string,
+  otp: string,
+  companyName: string,
+  adminName: string
+) => {
+  try {
+    console.log("Sending deletion OTP email to:", email);
+
+    const info = await transporter.sendMail({
+      from: `"${companyName}" <${env.SMTP_USER}>`,
+      to: email,
+      subject: `CRITICAL: Verification OTP for Member Deletion`,
+      html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8" />
+        <title>Deletion Verification</title>
+      </head>
+      <body style="margin:0;padding:0;background-color:#fef2f2;font-family:Arial,Helvetica,sans-serif;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fef2f2;padding:40px 0;">
+          <tr>
+            <td align="center">
+              <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 4px 12px rgba(185,28,28,0.1);border:1px solid #fee2e2;">
+                <tr>
+                  <td style="background:#dc2626;padding:30px;text-align:center;">
+                    <h1 style="color:#ffffff;margin:0;font-size:24px;">Security Verification</h1>
+                    <p style="color:#fee2e2;margin:5px 0 0 0;font-size:14px;">User Deletion Request</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:40px;">
+                    <h2 style="margin-top:0;color:#111827;font-size:20px;">Hello ${adminName},</h2>
+                    <p style="color:#4b5563;font-size:15px;line-height:1.6;">
+                      A request has been made to delete members from your company <strong>${companyName}</strong>. 
+                      For security reasons, this action requires a verification code.
+                    </p>
+
+                    <div style="margin:30px 0;background:#fef2f2;border-radius:12px;padding:30px;text-align:center;border:2px dashed #f87171;">
+                      <p style="margin:0 0 10px 0;color:#dc2626;font-size:14px;text-transform:uppercase;letter-spacing:1px;font-weight:bold;">Your Deletion OTP</p>
+                      <h1 style="margin:0;color:#111827;font-size:42px;letter-spacing:8px;font-family:monospace;">${otp}</h1>
+                    </div>
+
+                    <p style="color:#4b5563;font-size:14px;line-height:1.6;">
+                      <strong>Warning:</strong> This code is valid for 10 minutes. If you did not initiate this deletion request, please secure your account immediately.
+                    </p>
+
+                    <div style="margin-top:30px;padding-top:20px;border-top:1px solid #f3f4f6;color:#6b7280;font-size:12px;line-height:1.6;">
+                      <p>This is a critical security notification. Deleting users will permanently remove their access and data associated with the company tracking system.</p>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="background:#f9fafb;padding:20px;text-align:center;border-top:1px solid #f3f4f6;">
+                    <p style="margin:0;color:#9ca3af;font-size:12px;">
+                      © ${new Date().getFullYear()} ${companyName}.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+      `
+    });
+
+    console.log("Deletion OTP email sent:", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Deletion OTP email error:", error);
+    throw error;
+  }
+};
