@@ -336,6 +336,31 @@ async function getActiveWindow() {
     url = getWindowsURL(cleanAppName(appName));
   }
 
+
+/* ===== LINUX URL FALLBACK ===== */
+if (!url && process.platform === "linux") {
+
+  const cleanedApp = cleanAppName(appName);
+
+  const isBrowser = [
+    "Google Chrome",
+    "Brave Browser",
+    "Microsoft Edge",
+    "Firefox"
+  ].includes(cleanedApp);
+
+  if (isBrowser && title) {
+    url = detectDomain(title, cleanedApp);
+  }
+}
+
+
+
+
+
+
+
+
   /* ===== URL CLEANING ===== */
   if (url && (url.startsWith("http") || url.startsWith("www") || url.includes("."))) {
     try {
@@ -352,9 +377,20 @@ async function getActiveWindow() {
 
   const cleanedApp = cleanAppName(appName);
 
-  if (!url && title) {
-    url = detectDomain(title, cleanedApp);
+  // if (!url && title) {
+  //   url = detectDomain(title, cleanedApp);
+  // }
+
+if (!url && title) {
+  const detected = detectDomain(title, cleanedApp);
+
+  if (detected && detected !== "unknown.com") {
+    url = detected;
   }
+}
+
+
+
 
   return {
     title: (title || "Unknown Window").trim(),

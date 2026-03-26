@@ -96,7 +96,7 @@ function markActivity() {
 
   lastActivityTime = Date.now();
 
-  if (isIdle) {
+  if (isIdle) { 
     isIdle = false;
     activityStatus.classList.remove("idle");
     activityStatus.innerText = "Active";
