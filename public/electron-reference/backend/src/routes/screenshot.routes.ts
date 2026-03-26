@@ -101,10 +101,24 @@ router.get(
         throw new AppError("Insufficient permissions", 403);
       }
 
-      const screenshots = await Screenshot.find({
+      const query: any = {
         company_id: req.auth!.company_id,
         user_id: targetUserId,
-      })
+      };
+
+      // ✅ Date filtering
+      if (req.query.date) {
+        const dateStr = String(req.query.date); // Expected format: YYYY-MM-DD
+        const startOfDay = new Date(dateStr);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(dateStr);
+        endOfDay.setHours(23, 59, 59, 999);
+        
+        query.timestamp = { $gte: startOfDay, $lte: endOfDay };
+      }
+
+      const screenshots = await Screenshot.find(query)
         .sort({ timestamp: -1 })
         .lean();
 

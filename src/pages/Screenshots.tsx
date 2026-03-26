@@ -11,9 +11,12 @@ import {
   SelectValue, 
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Camera, Download, Users, Calendar } from "lucide-react";
 import { usePermissions } from "@/hooks/usePermissions";
 import { format } from "date-fns";
+import { Calendar as CalendarUI } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { Calendar as CalendarIcon, Download, Users, Camera, X } from "lucide-react";
 
 // const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
@@ -31,8 +34,9 @@ const Screenshots = () => {
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
-  // ✅ SEARCH STATE
+  // ✅ SEARCH + DATE STATE
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
   /* ================= INITIAL LOAD ================= */
 
@@ -52,9 +56,9 @@ const Screenshots = () => {
 
   useEffect(() => {
     if (selectedUser) {
-      fetchScreenshots(selectedUser);
+      fetchScreenshots(selectedUser, selectedDate);
     }
-  }, [selectedUser]);
+  }, [selectedUser, selectedDate]);
 
   /* ================= FETCH TEAM ================= */
 
@@ -73,13 +77,14 @@ const Screenshots = () => {
 
   /* ================= FETCH SCREENSHOTS ================= */
 
-  const fetchScreenshots = async (userId: string) => {
+  const fetchScreenshots = async (userId: string, date?: Date) => {
     setLoading(true);
     try {
-      const data = await apiFetch(
-        `/api/agent/screenshots/${userId}`,
-        token
-      );
+      let url = `/api/agent/screenshots/${userId}`;
+      if (date) {
+        url += `?date=${format(date, "yyyy-MM-dd")}`;
+      }
+      const data = await apiFetch(url, token);
       setScreenshots(data.screenshots || []);
     } catch (err) {
       console.error(err);
@@ -145,6 +150,41 @@ const Screenshots = () => {
                   ))}
                 </SelectContent>
               </Select>
+
+              {/* DATE PICKER (CALENDAR) */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-[240px] justify-start text-left font-normal bg-card border-border",
+                      !selectedDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {selectedDate ? format(selectedDate, "PPP") : <span>All dates</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <div className="p-2 border-b border-border flex justify-between items-center">
+                    <span className="text-xs font-medium">Pick a date</span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-7 text-xs px-2"
+                      onClick={() => setSelectedDate(undefined)}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                  <CalendarUI
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
 
             </div>
           )}
@@ -223,7 +263,7 @@ const Screenshots = () => {
                 <CardHeader className="p-3 pb-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Calendar size={12} />
+                      <CalendarIcon size={12} />
                       {shot.timestamp
                         ? format(
                           new Date(shot.timestamp),

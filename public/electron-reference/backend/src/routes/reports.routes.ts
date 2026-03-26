@@ -14,9 +14,13 @@ const router = Router();
 router.get('/summary', authenticate, requireRole('company_admin', 'sub_admin'), async (req: any, res, next) => {
     try {
         const companyId = new Types.ObjectId(req.auth.company_id as string);
-        const { period } = req.query;
+        const { period, userId, startDate, endDate } = req.query;
 
         const matchQuery: any = { company_id: companyId };
+
+        if (userId && userId !== 'All Users') {
+            matchQuery.user_id = new Types.ObjectId(userId as string);
+        }
 
         if (period === 'daily') {
             matchQuery.start_time = { $gte: new Date(new Date().setHours(0, 0, 0, 0)) };
@@ -28,6 +32,11 @@ router.get('/summary', authenticate, requireRole('company_admin', 'sub_admin'), 
             const lastMonth = new Date();
             lastMonth.setMonth(lastMonth.getMonth() - 1);
             matchQuery.start_time = { $gte: lastMonth };
+        } else if (period === 'custom' && startDate && endDate) {
+            matchQuery.start_time = {
+                $gte: new Date(startDate as string),
+                $lte: new Date(endDate as string)
+            };
         }
 
         // Aggregation for totals
@@ -151,9 +160,13 @@ router.get('/my-summary', authenticate, async (req: any, res, next) => {
 router.get('/users', authenticate, requireRole('company_admin', 'sub_admin'), async (req: any, res, next) => {
     try {
         const companyId = new Types.ObjectId(req.auth.company_id as string);
-        const { period } = req.query;
+        const { period, userId, startDate, endDate } = req.query;
 
         const matchQuery: any = { company_id: companyId };
+
+        if (userId && userId !== 'All Users') {
+            matchQuery.user_id = new Types.ObjectId(userId as string);
+        }
 
         if (period === 'daily') {
             matchQuery.start_time = { $gte: new Date(new Date().setHours(0, 0, 0, 0)) };
@@ -165,6 +178,11 @@ router.get('/users', authenticate, requireRole('company_admin', 'sub_admin'), as
             const lastMonth = new Date();
             lastMonth.setMonth(lastMonth.getMonth() - 1);
             matchQuery.start_time = { $gte: lastMonth };
+        } else if (period === 'custom' && startDate && endDate) {
+            matchQuery.start_time = {
+                $gte: new Date(startDate as string),
+                $lte: new Date(endDate as string)
+            };
         }
 
         const userStats = await Session.aggregate([

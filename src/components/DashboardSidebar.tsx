@@ -12,6 +12,8 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/contexts/AuthContext";
 import { ROLE_LABELS } from "@/lib/permissions";
 import RoleSwitcher from "@/components/RoleSwitcher";
+import { apiFetch } from "@/lib/api";
+import { useEffect } from "react";
 
 interface MenuItem {
   icon: typeof LayoutDashboard;
@@ -60,7 +62,28 @@ const DashboardSidebar = ({ onCloseMobile }: DashboardSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { can, canAction } = usePermissions();
-  const { user, logout } = useAuth();
+  const { user, logout, token } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!token) return;
+    const fetchUnread = async () => {
+      try {
+        const data = await apiFetch("/api/chat/summary", token);
+        if (data.success) {
+          const directCount = data.unreadDirect.reduce((acc: number, item: any) => acc + item.count, 0);
+          // For now, only showing direct unread, groups can be added if needed
+          setUnreadCount(directCount);
+        }
+      } catch (err) {
+        console.error("Sidebar count fetch error", err);
+      }
+    };
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 10000); // 10s
+    return () => clearInterval(interval);
+  }, [token]);
 
   const visibleItems = menuItems.filter((item) => {
     if (user && user.role === 'custom' && item.module) {
@@ -109,14 +132,24 @@ const DashboardSidebar = ({ onCloseMobile }: DashboardSidebarProps) => {
                 }
               }}
               className={cn(
-                "flex items-center gap-3 px-4 py-2.5 mx-2 rounded-lg text-sm transition-colors",
+                "flex items-center justify-between px-4 py-2.5 mx-2 rounded-lg text-sm transition-colors relative",
                 isActive
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary"
               )}
             >
-              <item.icon size={18} />
-              {!collapsed && item.label}
+              <div className="flex items-center gap-3">
+                <item.icon size={18} />
+                {!collapsed && item.label}
+              </div>
+              {item.label === "Chat" && unreadCount > 0 && (
+                <span className={cn(
+                  "bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center justify-center min-w-[18px] h-[18px]",
+                  collapsed && "absolute top-1 right-1"
+                )}>
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
             </Link>
           );
         })}

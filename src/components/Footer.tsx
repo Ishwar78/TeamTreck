@@ -21,7 +21,7 @@ const Footer = () => (
               className="h-10 w-auto object-contain"
             />
 
-            <span className="text-xl font-bold">TeamTrack</span>
+    
           </div>
 
           <p className="text-sm text-white/80 leading-relaxed mb-6 max-w-sm">
@@ -106,7 +106,7 @@ const Footer = () => (
 
       {/* Bottom */}
       <div className="border-t border-white/20 mt-12 pt-6 text-center text-sm text-white/70">
-        © 2026 TeamTrack. All rights reserved.
+        © 2026 Multiclout. All rights reserved.
       </div>
     </div>
   </footer>

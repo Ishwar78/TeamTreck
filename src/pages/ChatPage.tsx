@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch, API_BASE } from "@/lib/api";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Paperclip, Image as ImageIcon, X } from "lucide-react";
+import { Paperclip, Image as ImageIcon, X, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const ChatPage = () => {
@@ -14,6 +14,7 @@ const ChatPage = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [counts, setCounts] = useState<{ unreadDirect: any[], totalSent: any[], groupCounts: any[] }>({ unreadDirect: [], totalSent: [], groupCounts: [] });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -45,13 +46,6 @@ const ChatPage = () => {
         const peersData = await apiFetch("/api/chat/peers", token);
         if (peersData?.users) {
           setUsers(peersData.users);
-          
-          // Auto-select first chat if none active
-          if (!activeChat && peersData.users.length > 0) {
-            const first = peersData.users[0];
-            setActiveChat({ id: first._id, name: first.name, type: "user" });
-            loadMessages({ id: first._id, type: "user" });
-          }
         }
 
         // Fetch Groups (Admin sees all, others see joining)
@@ -63,12 +57,20 @@ const ChatPage = () => {
         if (groupsData?.groups) {
           setGroups(groupsData.groups);
         }
+
+        // Fetch Summary Counts
+        const summaryData = await apiFetch("/api/chat/summary", token);
+        if (summaryData.success) {
+          setCounts(summaryData);
+        }
       } catch (err) {
         console.error("FETCH ERROR:", err);
       }
     };
 
     fetchData();
+    const countInterval = setInterval(fetchData, 10000); // Poll every 10s for new message counts
+    return () => clearInterval(countInterval);
   }, [token, user]);
 
   /* ================= AUTO REFRESH ================= */
@@ -148,6 +150,34 @@ const ChatPage = () => {
     }
   };
 
+  const markAsSeen = async (chat: { id: string, type: "user" | "group" }) => {
+    if (!token || !chat.id) return;
+    try {
+      const endpoint = chat.type === "group" ? `/api/chat/mark-group-seen/${chat.id}` : `/api/chat/mark-seen/${chat.id}`;
+      await apiFetch(endpoint, token, { method: "POST" });
+      
+      // Refresh counts
+      const summaryData = await apiFetch("/api/chat/summary", token);
+      if (summaryData.success) setCounts(summaryData);
+    } catch (err) {
+      console.error("Mark seen error", err);
+    }
+  };
+
+  const renderMessageContent = (msg: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return msg.split(urlRegex).map((part, i) => {
+      if (part.match(urlRegex)) {
+        return (
+          <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-200 break-all">
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
   const isEmployeeDashboard = user?.role === "employee" || user?.role === "user" || user?.role === "intern";
 
   const content = (
@@ -161,48 +191,62 @@ const ChatPage = () => {
           {isEmployeeDashboard ? "Team" : "Employees"}
         </div>
         
-        {users.map((u) => (
-          <div
-            key={u._id}
-            onClick={() => {
-              setActiveChat({ id: u._id, name: u.name, type: "user" });
-              setMessages([]);
-              loadMessages({ id: u._id, type: "user" });
-            }}
-            className={`px-4 py-3 cursor-pointer ${
-              activeChat?.id === u._id
-                ? "bg-blue-600/20 text-white"
-                : "text-gray-300 hover:bg-gray-800"
-            }`}
-          >
-            {u.name}
-          </div>
-        ))}
+        {users.map((u) => {
+          const unread = counts.unreadDirect.find(c => (c._id === u._id || c._id === u.id))?.count || 0;
+
+          return (
+            <div
+              key={u._id}
+              onClick={() => {
+                setActiveChat({ id: u._id, name: u.name, type: "user" });
+                setMessages([]);
+                loadMessages({ id: u._id, type: "user" });
+                markAsSeen({ id: u._id, type: "user" });
+              }}
+              className={`px-4 py-3 cursor-pointer flex justify-between items-center ${
+                activeChat?.id === u._id
+                  ? "bg-blue-600/20 text-white"
+                  : "text-gray-300 hover:bg-gray-800"
+              }`}
+            >
+              <span>{u.name}</span>
+              <div className="flex gap-2">
+                {unread > 0 && <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded-full">{unread}</span>}
+              </div>
+            </div>
+          );
+        })}
 
         {/* GROUPS */}
         {groups.length > 0 && (
           <>
             <div className="p-3 text-gray-400 text-xs mt-4">GROUPS</div>
-            {groups.map((g) => (
-              <div
-                key={g._id}
-                onClick={() => {
-                  setActiveChat({ id: g._id, name: g.name, type: "group" });
-                  setMessages([]);
-                  loadMessages({ id: g._id, type: "group" });
-                }}
-                className={`px-4 py-3 cursor-pointer flex items-center gap-2 ${
-                  activeChat?.id === g._id
-                    ? "bg-blue-600/20 text-white"
-                    : "text-gray-300 hover:bg-gray-800"
-                }`}
-              >
-                <div className="w-6 h-6 rounded bg-gray-700 flex items-center justify-center text-xs opacity-80">
-                  #
+            {groups.map((g) => {
+              // Group unread is currently just total count for info, making it less prominent
+              const gCount = counts.groupCounts.find(c => c._id === g._id)?.count || 0;
+              return (
+                <div
+                  key={g._id}
+                  onClick={() => {
+                    setActiveChat({ id: g._id, name: g.name, type: "group" });
+                    setMessages([]);
+                    loadMessages({ id: g._id, type: "group" });
+                    markAsSeen({ id: g._id, type: "group" });
+                  }}
+                  className={`px-4 py-3 cursor-pointer flex justify-between items-center ${
+                    activeChat?.id === g._id
+                      ? "bg-blue-600/20 text-white"
+                      : "text-gray-300 hover:bg-gray-800"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded bg-gray-700 flex items-center justify-center text-xs opacity-80">#</div>
+                    {g.name}
+                  </div>
+                  {/* For groups, we don't have per-user unread tracking yet, so showing total is optional */}
                 </div>
-                {g.name}
-              </div>
-            ))}
+              );
+            })}
           </>
         )}
       </div>
@@ -218,11 +262,16 @@ const ChatPage = () => {
 
         {/* MESSAGES */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.length === 0 && (
+          {!activeChat ? (
+            <div className="text-center text-gray-500 mt-20">
+              <MessageCircle size={48} className="mx-auto mb-4 opacity-20" />
+              <p>Select a conversation to start chatting</p>
+            </div>
+          ) : messages.length === 0 ? (
             <div className="text-center text-gray-500 mt-10">
               No messages yet
             </div>
-          )}
+          ) : null}
 
           {messages.map((m, i) => {
             const isMe = m.sender === user?.id || m.sender?._id === user?.id;
@@ -270,7 +319,7 @@ const ChatPage = () => {
                         )}
                       </div>
                     )}
-                    {m.message && <div>{m.message}</div>}
+                    {m.message && <div>{renderMessageContent(m.message)}</div>}
                   </div>
               </div>
             );

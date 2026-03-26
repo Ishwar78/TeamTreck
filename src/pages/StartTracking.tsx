@@ -42,7 +42,7 @@ const StartTracking = () => {
                 className="text-4xl md:text-5xl font-bold mb-6 leading-tight"
               >
                 Start Tracking Your Time With{" "}
-                <span className="text-gradient">TeamTrack</span>
+                <span className="text-gradient">Multiclout</span>
               </motion.h1>
 
               <motion.p

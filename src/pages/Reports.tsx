@@ -9,6 +9,12 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { PageGuard } from "@/components/RoleGuard";
 import { useAuth } from "@/contexts/AuthContext";
 import axios from "axios";
+import { Calendar as CalendarUI } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { DateRange } from "react-day-picker";
+import { addDays } from "date-fns";
+import { format } from "date-fns";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
@@ -20,6 +26,10 @@ const Reports = () => {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("daily");
   const [selectedUser, setSelectedUser] = useState("All Users");
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: addDays(new Date(), 0),
+  });
 
   const [totals, setTotals] = useState({
     active: 0,
@@ -31,7 +41,7 @@ const Reports = () => {
 
   const [weeklyData, setWeeklyData] = useState<{ day: string, hours: number }[]>([]);
   const [userSummaries, setUserSummaries] = useState<any[]>([]);
-  const [usersList, setUsersList] = useState<string[]>(["All Users"]);
+  const [usersList, setUsersList] = useState<{ id: string, name: string }[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,24 +50,26 @@ const Reports = () => {
         setLoading(true);
         const headers = { Authorization: `Bearer ${token}` };
 
-        // Fetch Summary
-        // const summaryRes = await axios.get(`http://localhost:5000/api/reports/summary?period=${period}`, { headers });
+        let queryParams = `period=${period}`;
+        if (selectedUser !== "All Users") {
+          queryParams += `&userId=${selectedUser}`;
+        }
+        if (period === "custom" && date?.from && date?.to) {
+          queryParams += `&startDate=${date.from.toISOString()}&endDate=${date.to.toISOString()}`;
+        }
 
-const summaryRes = await axios.get(`${API_BASE}/api/reports/summary?period=${period}`, { headers });
+        const summaryRes = await axios.get(`${API_BASE}/api/reports/summary?${queryParams}`, { headers });
 
         if (summaryRes.data.success) {
           setTotals(summaryRes.data.totals);
           setWeeklyData(summaryRes.data.weekly);
         }
 
-        // Fetch User Stats
-        // const usersRes = await axios.get(`http://localhost:5000/api/reports/users?period=${period}`, { headers });
-
-const usersRes = await axios.get(`${API_BASE}/api/reports/users?period=${period}`, { headers });
+        const usersRes = await axios.get(`${API_BASE}/api/reports/users?${queryParams}`, { headers });
 
         if (usersRes.data.success) {
           setUserSummaries(usersRes.data.users);
-          setUsersList(["All Users", ...usersRes.data.users.map((u: any) => u.name)]);
+          setUsersList(usersRes.data.users.map((u: any) => ({ id: u.id, name: u.name })));
         }
 
       } catch (error) {
@@ -69,15 +81,13 @@ const usersRes = await axios.get(`${API_BASE}/api/reports/users?period=${period}
     };
 
     fetchData();
-  }, [token, period]);
+  }, [token, period, selectedUser, date]);
 
   const handleExport = (type: "pdf" | "csv") => {
     toast({ title: `${type.toUpperCase()} export started`, description: "Your report will download shortly." });
   };
 
-  const filteredUsers = selectedUser === "All Users"
-    ? userSummaries
-    : userSummaries.filter(u => u.name === selectedUser);
+  const filteredUsers = userSummaries; // Backend now handles filtering if userId is passed, or returns all
 
   // Recalculate totals for filtered view if needed, but for now we keep global totals
   // or we could map them. Let's keep global structure for consistency with original design unless specified.
@@ -125,15 +135,59 @@ const usersRes = await axios.get(`${API_BASE}/api/reports/users?period=${period}
                   <SelectItem value="daily">Daily</SelectItem>
                   <SelectItem value="weekly">Weekly</SelectItem>
                   <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="custom">Custom</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {period === "custom" && (
+              <div className="flex items-center gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="date"
+                      variant={"outline"}
+                      className={cn(
+                        "w-[260px] justify-start text-left font-normal h-9 bg-card border-border",
+                        !date && "text-muted-foreground"
+                      )}
+                    >
+                      <Calendar size={14} className="mr-2 h-4 w-4" />
+                      {date?.from ? (
+                        date.to ? (
+                          <>
+                            {format(date.from, "LLL dd, y")} -{" "}
+                            {format(date.to, "LLL dd, y")}
+                          </>
+                        ) : (
+                          format(date.from, "LLL dd, y")
+                        )
+                      ) : (
+                        <span>Pick a date range</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarUI
+                      initialFocus
+                      mode="range"
+                      defaultMonth={date?.from}
+                      selected={date}
+                      onSelect={setDate}
+                      numberOfMonths={2}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+
             <div className="flex items-center gap-2">
               <User size={14} className="text-muted-foreground" />
               <Select value={selectedUser} onValueChange={setSelectedUser}>
                 <SelectTrigger className="w-[180px] h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {usersList.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                  <SelectItem value="All Users">All Users</SelectItem>
+                  {usersList.map(u => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

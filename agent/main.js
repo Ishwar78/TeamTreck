@@ -306,6 +306,26 @@ async function getActiveWindow() {
   } catch (err) {
     console.log("active-win error:", err.message);
   }
+  /* ===== LINUX ACTIVE WINDOW FIX ===== */
+if (process.platform === "linux" && (!title || !appName)) {
+  try {
+
+    title = execSync("xdotool getactivewindow getwindowname")
+      .toString()
+      .trim();
+
+    const pid = execSync("xdotool getactivewindow getwindowpid")
+      .toString()
+      .trim();
+
+    appName = execSync(`ps -p ${pid} -o comm=`)
+      .toString()
+      .trim();
+
+  } catch (err) {
+    console.log("Linux window fetch error:", err.message);
+  }
+}
 
   /* ===== MAC URL ===== */
 

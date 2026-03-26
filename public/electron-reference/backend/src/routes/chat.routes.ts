@@ -6,7 +6,7 @@ import { authenticate } from "../middleware/auth";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-
+import mongoose from "mongoose";
 const router = Router();
 
 // Multer Config
@@ -35,6 +35,62 @@ router.post("/upload", authenticate, upload.single("file"), (req: any, res) => {
   } catch (err) {
     res.status(500).json({ success: false });
   }
+});
+
+/* ================= GET SUMMARY (Counts) ================= */
+router.get("/summary", authenticate, async (req: any, res) => {
+  try {
+    const myId = req.auth.user_id;
+    const myCompany = req.auth.company_id;
+
+    // Get unread counts for direct messages (where I am the receiver and seen is false)
+    const unreadDirect = await Chat.aggregate([
+      { $match: { receiver: new mongoose.Types.ObjectId(myId), seen: false, company_id: new mongoose.Types.ObjectId(myCompany) } },
+      { $group: { _id: "$sender", count: { $sum: 1 } } }
+    ]);
+
+    // Get total counts for admin (how many messages sent by each user)
+    const totalSent = await Chat.aggregate([
+      { $match: { group_id: { $exists: false }, company_id: new mongoose.Types.ObjectId(myCompany) } },
+      { $group: { _id: "$sender", count: { $sum: 1 } } }
+    ]);
+
+    // Simplified group unread (just total for now, or sophisticated per-user seen)
+    const groupCounts = await Chat.aggregate([
+      { $match: { group_id: { $exists: true }, company_id: new mongoose.Types.ObjectId(myCompany) } },
+      { $group: { _id: "$group_id", count: { $sum: 1 } } }
+    ]);
+
+    res.json({
+      success: true,
+      unreadDirect,
+      totalSent,
+      groupCounts
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false });
+  }
+});
+
+/* ================= MARK AS SEEN ================= */
+router.post("/mark-seen/:userId", authenticate, async (req: any, res) => {
+  try {
+    const myId = req.auth.user_id;
+    const otherId = req.params.userId;
+    await Chat.updateMany(
+      { sender: otherId, receiver: myId, seen: false },
+      { $set: { seen: true } }
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+router.post("/mark-group-seen/:groupId", authenticate, async (req: any, res) => {
+  // Simplified: mark all in group as seen for me (would usually need a separate seen-by-user model)
+  res.json({ success: true });
 });
 
 /* ================= GET PEERS (Group Members) ================= */
@@ -164,6 +220,14 @@ router.get("/:userId", authenticate, async (req: any, res) => {
         { sender: userId, receiver: myId }
       ]
     }).sort({ createdAt: 1 });
+
+    // Auto mark as seen
+    if (messages.length > 0) {
+      await Chat.updateMany(
+        { sender: userId, receiver: myId, seen: false },
+        { $set: { seen: true } }
+      );
+    }
 
     res.json({ success: true, messages });
 
