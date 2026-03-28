@@ -642,4 +642,37 @@ router.post('/users/bulk-delete', authenticate, requireRole('company_admin'), as
   }
 });
 
+/* ================= DELETE INVITATIONS WITH OTP ================= */
+
+router.delete('/invites/:token', authenticate, requireRole('company_admin'), async (req, res, next) => {
+  try {
+    const { otp } = req.body;
+    const { token } = req.params;
+
+    if (!otp) throw new AppError('OTP is required', 400);
+
+    const admin = await User.findById(req.auth!.user_id);
+    if (!admin || !admin.deletionOTP || admin.deletionOTP !== otp || (admin.deletionOTPExpires && admin.deletionOTPExpires < new Date())) {
+      throw new AppError('Invalid or expired OTP', 400);
+    }
+
+    const invitation = await Invitation.findOneAndDelete({
+      token,
+      company_id: req.auth!.company_id,
+      status: 'pending'
+    });
+
+    if (!invitation) throw new AppError('Invitation not found or already accepted', 404);
+
+    // Clear OTP after success
+    admin.deletionOTP = undefined;
+    admin.deletionOTPExpires = undefined;
+    await admin.save();
+
+    res.json({ success: true, message: 'Invitation deleted successfully' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export const companyRoutes = router;

@@ -281,10 +281,10 @@ const RoleManagement = () => {
                           >
                             <optgroup label="Default System Roles">
                               <option value="company_admin">Company Admin</option>
-                              <option value="sub_admin">Sub Admin</option>
+                              {/* <option value="sub_admin">Sub Admin</option> */}
                               <option value="employee">Employee</option>
                               <option value="intern">Intern</option>
-                              <option value="user">User</option>
+                              {/* <option value="user">User</option> */}
                             </optgroup>
                             
                             {customRoles.filter(cr => cr.isActive !== false).length > 0 && (
@@ -416,10 +416,10 @@ const RoleManagement = () => {
                 <select required className="w-full bg-secondary text-foreground border border-border rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-primary"
                   value={userFormData.role} onChange={e => setUserFormData({ ...userFormData, role: e.target.value })}>
                   <optgroup label="Default System Roles">
-                    <option value="sub_admin">Sub Admin</option>
+                    {/* <option value="sub_admin">Sub Admin</option> */}
                     <option value="employee">Employee</option>
                     <option value="intern">Intern</option>
-                    <option value="user">User</option>
+                    {/* <option value="user">User</option> */}
                   </optgroup>
                   {customRoles.filter(cr => cr.isActive !== false).length > 0 && (
                     <optgroup label="Custom Matrix Roles">

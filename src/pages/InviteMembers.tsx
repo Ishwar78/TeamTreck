@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { UserPlus, Mail, Shield, AlertTriangle, CheckCircle2, Copy, Users } from "lucide-react";
+import { UserPlus, Mail, Shield, AlertTriangle, CheckCircle2, Copy, Users, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +33,13 @@ const InviteMembers = () => {
   const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
   const [bulkMessage, setBulkMessage] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
+
+  // Invitation Deletion States
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingToken, setDeletingToken] = useState<string | null>(null);
+  const [deleteOtp, setDeleteOtp] = useState("");
+  const [requestingDelete, setRequestingDelete] = useState(false);
+  const [verifyingDelete, setVerifyingDelete] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -106,6 +113,40 @@ const InviteMembers = () => {
     setSelectedTokens(prev => 
       prev.includes(token) ? prev.filter(t => t !== token) : [...prev, token]
     );
+  };
+
+  const handleRequestDelete = async (invToken: string) => {
+    setDeletingToken(invToken);
+    setRequestingDelete(true);
+    try {
+      await apiFetch("/api/company/users/delete-request", token, { method: "POST" });
+      toast({ title: "OTP Sent", description: "Verification code sent to your admin email" });
+      setShowDeleteModal(true);
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to request deletion", variant: "destructive" });
+    } finally {
+      setRequestingDelete(false);
+    }
+  };
+
+  const handleVerifyDelete = async () => {
+    if (!deleteOtp || !deletingToken) return;
+    setVerifyingDelete(true);
+    try {
+      await apiFetch(`/api/company/invites/${deletingToken}`, token, {
+        method: "DELETE",
+        body: JSON.stringify({ otp: deleteOtp })
+      });
+      toast({ title: "Deleted", description: "Invitation removed successfully" });
+      setShowDeleteModal(false);
+      setDeleteOtp("");
+      setDeletingToken(null);
+      fetchInvites();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to delete invitation", variant: "destructive" });
+    } finally {
+      setVerifyingDelete(false);
+    }
   };
 
   const handleSendBulkMessage = async () => {
@@ -286,23 +327,97 @@ const InviteMembers = () => {
                       <span className="flex items-center gap-1"><AlertTriangle size={10} /> {inv.status}</span>
                     )}
                   </Badge>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => {
-                      const link = `${window.location.origin}/invite/${inv.token}`;
-                      navigator.clipboard.writeText(link);
-                      toast({ title: "Link copied!", description: link });
-                    }}
-                  >
-                    <Copy size={14} />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      onClick={() => {
+                        const link = `${window.location.origin}/invite/${inv.token}`;
+                        navigator.clipboard.writeText(link);
+                        toast({ title: "Link copied!", description: link });
+                      }}
+                    >
+                      <Copy size={14} />
+                    </Button>
+
+                    {inv.status === "pending" && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => handleRequestDelete(inv.token)}
+                        disabled={requestingDelete && deletingToken === inv.token}
+                      >
+                        <Trash2 size={14} className={requestingDelete && deletingToken === inv.token ? "animate-pulse" : ""} />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           </motion.div>
         </div>
+
+        {/* OTP Deletion Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-card w-full max-w-sm rounded-xl border border-border shadow-2xl overflow-hidden"
+            >
+              <div className="flex justify-between items-center p-4 border-b border-border bg-secondary/20">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Shield size={16} className="text-primary" />
+                  Verify Admin Identity
+                </h3>
+                <button 
+                  onClick={() => setShowDeleteModal(false)} 
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              
+              <div className="p-6 space-y-4 text-center">
+                <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-2">
+                  <Mail size={24} />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">OTP Sent to {user?.email}</p>
+                  <p className="text-xs text-muted-foreground">Please enter the 6-digit verification code to delete this invitation permanently.</p>
+                </div>
+                
+                <Input
+                  type="text"
+                  maxLength={6}
+                  placeholder="Enter 6-digit OTP"
+                  className="text-center text-lg tracking-[0.5em] font-bold h-12 bg-secondary/50"
+                  value={deleteOtp}
+                  onChange={(e) => setDeleteOtp(e.target.value.replace(/\D/g, ""))}
+                />
+
+                <div className="flex flex-col gap-2 pt-2">
+                  <Button 
+                    className="w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground h-11" 
+                    onClick={handleVerifyDelete}
+                    disabled={verifyingDelete || deleteOtp.length !== 6}
+                  >
+                    {verifyingDelete ? "Deleting Invitation..." : "Confirm Deletion"}
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full text-xs h-9" 
+                    onClick={() => setShowDeleteModal(false)}
+                  >
+                    Cancel Action
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </PageGuard>
     </DashboardLayout>
   );
