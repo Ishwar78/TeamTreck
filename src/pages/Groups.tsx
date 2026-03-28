@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiFetch } from "@/lib/api";
@@ -8,13 +10,16 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UsersRound, Plus, Users, Search, Edit, Trash2 } from "lucide-react";
+import { UsersRound, Plus, Users, Search, Edit, Trash2, MessageCircle } from "lucide-react";
+
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const Groups = () => {
   const { token } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+
   
   const [groups, setGroups] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
@@ -299,11 +304,21 @@ const Groups = () => {
                           variant="ghost" 
                           size="icon"
                           type="button"
+                          onClick={() => navigate(`/dashboard/chat?groupId=${group._id}`)}
+                          title="Group Chat"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          type="button"
                           onClick={(e) => handleViewGroup(group, e)}
                           title="View Members"
                         >
                           <UsersRound className="h-4 w-4" />
                         </Button>
+
                         <Button 
                           variant="ghost" 
                           size="icon"

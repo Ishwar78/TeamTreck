@@ -225,25 +225,34 @@ const TimeLogs = () => {
         <div className="flex-1 flex flex-col overflow-hidden">
 
           {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-center sm:items-center p-4 bg-card rounded border mb-4 gap-2">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" onClick={() => setCurrentDate(subDays(currentDate, 1))}>
-                <ChevronLeft size={18} />
-              </Button>
+         {/* Header */}
+<div className="flex flex-col sm:flex-row justify-between items-center sm:items-center p-4 bg-card rounded border mb-4 gap-2">
+  
+  <div className="flex items-center gap-2">
 
-              <div className="font-medium">
-                {format(currentDate, "EEE, dd MMM yyyy")}
-              </div>
+    <Button variant="ghost" onClick={() => setCurrentDate(subDays(currentDate, 1))}>
+      <ChevronLeft size={18} />
+    </Button>
 
-              <Button variant="ghost" onClick={() => setCurrentDate(addDays(currentDate, 1))}>
-                <ChevronRight size={18} />
-              </Button>
-            </div>
+    {/* 🔥 CUSTOM DATE PICKER */}
+  <input
+  type="date"
+  value={format(currentDate, "yyyy-MM-dd")}
+  onChange={(e) => setCurrentDate(new Date(e.target.value + "T00:00:00"))}
+  className="px-3 py-2 rounded border border-border bg-white text-black text-sm 
+             dark:bg-white dark:text-black"
+/>
 
-            <div className="text-green-500 font-bold">
-              {totalWork}
-            </div>
-          </div>
+    <Button variant="ghost" onClick={() => setCurrentDate(addDays(currentDate, 1))}>
+      <ChevronRight size={18} />
+    </Button>
+
+  </div>
+
+  <div className="text-green-500 font-bold">
+    {totalWork}
+  </div>
+</div>
 
           {/* Timeline Card */}
           <Card className="flex-1 flex flex-col overflow-hidden">

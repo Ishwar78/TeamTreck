@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
+
 import {
   LayoutDashboard, Users, UsersRound, Clock, Camera, Globe, BarChart3,
   Settings, CreditCard, LogOut, ChevronLeft, UserPlus, Building2,
@@ -13,7 +14,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ROLE_LABELS } from "@/lib/permissions";
 import RoleSwitcher from "@/components/RoleSwitcher";
 import { apiFetch } from "@/lib/api";
-import { useEffect } from "react";
 
 interface MenuItem {
   icon: typeof LayoutDashboard;
@@ -64,6 +64,14 @@ const DashboardSidebar = ({ onCloseMobile }: DashboardSidebarProps) => {
   const { can, canAction } = usePermissions();
   const { user, logout, token } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
+  
+  const totalUnreadRef = useRef(-1); // Switch to -1 as initial uninitialized state
+  const lastSoundTriggerRef = useRef(0);
+  const messageSoundRef = useRef<HTMLAudioElement | null>(null);
+
+  const isChatPage = location.pathname.includes("/dashboard/chat");
+
+
 
   useEffect(() => {
     if (!token) return;
@@ -71,19 +79,62 @@ const DashboardSidebar = ({ onCloseMobile }: DashboardSidebarProps) => {
       try {
         const data = await apiFetch("/api/chat/summary", token);
         if (data.success) {
-          const directCount = data.unreadDirect.reduce((acc: number, item: any) => acc + item.count, 0);
-          // For now, only showing direct unread, groups can be added if needed
-          setUnreadCount(directCount);
+          const directCount = data.unreadDirect.reduce((acc: number, item: any) => acc + (item.count || 0), 0);
+          const groupCount = data.groupCounts?.reduce((acc: number, item: any) => acc + (item.count || 0), 0) || 0;
+          const totalUnread = directCount + groupCount;
+          
+          setUnreadCount(totalUnread);
+
+          // 🔥 GLOBAL SOUND NOTIFICATION LOGIC
+          // Only play if:
+          // 1. Not on Chat page (ChatPage handles its own sounds)
+          // 2. Not the first load (to avoid sound on mount)
+          // 3. Count has increased
+          if (!isChatPage && totalUnreadRef.current !== -1 && totalUnread > totalUnreadRef.current) {
+             const now = Date.now();
+             if (now - lastSoundTriggerRef.current > 1000) { // 1s cooldown
+                lastSoundTriggerRef.current = now;
+                if (messageSoundRef.current) {
+                  messageSoundRef.current.currentTime = 0;
+                  messageSoundRef.current.play().catch(() => {});
+                }
+             }
+          }
+          totalUnreadRef.current = totalUnread;
         }
       } catch (err) {
         console.error("Sidebar count fetch error", err);
       }
     };
 
+    // Initialize audio and unlock on first interaction
+    if (!messageSoundRef.current) {
+      messageSoundRef.current = new Audio("/sounds/notification.mp3");
+      messageSoundRef.current.volume = 1;
+
+      const unlockAudio = () => {
+        if (messageSoundRef.current) {
+          messageSoundRef.current.play().then(() => {
+            messageSoundRef.current?.pause();
+            messageSoundRef.current!.currentTime = 0;
+            document.removeEventListener('click', unlockAudio);
+          }).catch(() => {});
+        }
+      };
+      document.addEventListener('click', unlockAudio);
+    }
+
+    // Removed: totalUnreadRef.current = -1; (Moved to Ref initialization to persist)
+
+
     fetchUnread();
-    const interval = setInterval(fetchUnread, 10000); // 10s
-    return () => clearInterval(interval);
-  }, [token]);
+    const interval = setInterval(fetchUnread, 5000); // 5s poll for better responsiveness
+    return () => {
+      clearInterval(interval);
+      // document.removeEventListener('click', unlockAudio); // Caution: unlockAudio is local to this effect
+    };
+  }, [token, isChatPage]);
+
 
   const visibleItems = menuItems.filter((item) => {
     if (user && user.role === 'custom' && item.module) {

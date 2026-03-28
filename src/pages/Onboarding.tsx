@@ -67,7 +67,7 @@ const industries = [
   "Consulting", "E-commerce", "Manufacturing", "Media", "Other",
 ];
 
-const companySizes = ["1-10", "11-25", "26-50", "51-100", "100+"];
+const companySizes = ["0-5","1-10", "11-25", "26-50", "51-100", "100+"];
 
 // ─── Step Components ───
 const CompanyStep = ({ data, onChange }: { data: CompanyData; onChange: (d: CompanyData) => void }) => (

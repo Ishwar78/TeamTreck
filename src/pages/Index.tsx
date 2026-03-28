@@ -15,7 +15,14 @@ import timeImg from "@/images/time.png";
 import screenshotImg from "@/images/Screenshot.png";
 import reportImg from "@/images/report.png";
 import urlImg from "@/images/url.png";
+import usertreck from "@/images/useractivity.png";
+import chatimage from "@/images/Chat.png";
+import rolemanage from "@/images/Rolemanage12.png";
+import taskimage from "@/images/task.png";
+import invitei from "@/images/invite.png"
+
 import StartTracking from "./StartTracking";
+import timelogsimage from "@/images/Timelogs5.png";
 import industryImg1 from "@/images/industry1.webp";
 import Pricing from "./Pricing";
 
@@ -29,18 +36,14 @@ const fadeUp = {
 
 const features = [
   { icon: Clock, title: "Time Tracking", desc: "Automatic app start/stop, active & idle time logging with per-user daily timelines." },
-  { icon: Camera, title: "Screenshot Monitoring", desc: "12 silent screenshots/hour at randomized intervals. Secure upload with optional blur." },
+  { icon: Camera, title: "Screenshot Monitoring", desc: "Silent screenshots at randomized intervals. Secure upload ." },
   { icon: Globe, title: "URL & App Tracking", desc: "Track active windows, browser tabs, and time spent per application or website." },
   { icon: Monitor, title: "Idle Detection", desc: "Real-time active/idle/offline status detection with keyboard & mouse monitoring." },
   { icon: BarChart3, title: "Productivity Analytics", desc: "Daily, weekly & monthly reports with PDF/CSV export and company-wide insights." },
   { icon: Users, title: "Team Management", desc: "Role-based access with Company Admin, Sub-Admin, and Employee roles." },
   { icon: Shield, title: "Data Isolation", desc: "Strict multi-tenant architecture with company-wise data isolation on every table." },
-  { icon: Zap, title: "Desktop Agent", desc: "Silent background agent for Windows, Mac & Linux. Auto-start, tray-based, tamper-proof." },
+  { icon: Zap, title: "Desktop Agent", desc: "Silent background agent for Windows, Mac & Linux. " },
 ];
-
-
-
-
 
 
 const stats = [
@@ -57,6 +60,13 @@ const featureScreens = [
   { label: "Screenshot Monitoring", image: screenshotImg },
   { label: "Insights Report", image: reportImg },
   { label: "URL Tracking", image: urlImg },
+  {label: "Time Logs" , image: timelogsimage },
+  {label : "User Activity",image: usertreck},
+  {label: "Chat",image: chatimage},
+  {label: "RoleManagement",image: rolemanage},
+  {label: "Task Assign",image:taskimage},
+  {label: "Invite Member",image:invitei},
+
 ];
 
 const FeatureTabs = () => {
@@ -304,57 +314,41 @@ const FeatureTabs = () => {
 
       {/* LEFT CONTENT */}
       <div>
-        <h2 className="text-4xl md:text-5xl font-bold mb-6">
+        <h2 className="text-4xl md:text-5xl font-bold mb-10">
           Who Can Use <span className="text-gradient">MULTICLOUT TeamTrex</span>
         </h2>
 
-        <p className="text-white/80 mb-10 max-w-xl">
-          TeamTrack adapts to the unique needs of every industry,
-          simplifying workflows and boosting productivity for teams of all sizes.
-        </p>
+        {/* 🔥 GRID BOXES */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-5">
 
-        <div className="space-y-6">
-
-          <div className="bg-gradient-card border border-border rounded-xl p-6 hover:shadow-glow transition">
-            <h3 className="text-lg font-semibold text-white mb-1">
-              Technology & IT
-            </h3>
-            <p className="text-sm text-white/70">
-              Streamline project management and track development workflows efficiently.
-            </p>
-          </div>
-
-          <div className="bg-gradient-card border border-border rounded-xl p-6 hover:shadow-glow transition">
-            <h3 className="text-lg font-semibold text-white mb-1">
-              Marketing & Creative Agencies
-            </h3>
-            <p className="text-sm text-white/70">
-              Manage campaigns, track deadlines, and collaborate seamlessly.
-            </p>
-          </div>
-
-          <div className="bg-gradient-card border border-border rounded-xl p-6 hover:shadow-glow transition">
-            <h3 className="text-lg font-semibold text-white mb-1">
-              Healthcare
-            </h3>
-            <p className="text-sm text-white/70">
-              Simplify administrative tasks and manage staff shifts effectively.
-            </p>
-          </div>
-
-          <div className="bg-gradient-card border border-border rounded-xl p-6 hover:shadow-glow transition">
-            <h3 className="text-lg font-semibold text-white mb-1">
-              Retail & E-Commerce
-            </h3>
-            <p className="text-sm text-white/70">
-              Optimize inventory management and track online orders efficiently.
-            </p>
-          </div>
+          {[
+            "Technology & IT",
+            "Marketing & Creative Agencies",
+            "Healthcare",
+            "Retail & E-Commerce",
+            "Finance & Banking",
+            "Education & E-Learning",
+            "Real Estate",
+            "Logistics & Supply Chain",
+            "Startups & SaaS Companies",
+            "Consulting Firms",
+            "Media & Entertainment",
+            "HR & Recruitment Agencies"
+          ].map((industry, i) => (
+            <div
+              key={i}
+              className="bg-gradient-card border border-border rounded-xl p-5 hover:shadow-glow hover:border-primary/40 transition duration-300 cursor-pointer group"
+            >
+              <h3 className="text-base md:text-lg font-semibold text-white group-hover:text-primary transition">
+                {industry}
+              </h3>
+            </div>
+          ))}
 
         </div>
       </div>
 
-      {/* RIGHT SINGLE IMAGE */}
+      {/* RIGHT IMAGE */}
       <div className="flex justify-center">
         <div className="w-full max-w-lg rounded-3xl overflow-hidden shadow-glow">
           <img

@@ -1,136 +1,161 @@
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.1,
-      duration: 0.5,
-      ease: [0.25, 0.46, 0.45, 0.94] as const,
-    },
-  }),
-};
-
+// 🔥 ADD AS MANY AS YOU WANT
 const testimonials = [
   {
     name: "Rahul Mehta",
     role: "Founder, TechNova",
-    feedback:
-      "This platform completely transformed how we track remote teams. Screenshots and real-time tracking are extremely accurate.",
+    feedback: "This platform completely transformed how we track remote teams.",
   },
   {
     name: "Priya Sharma",
     role: "HR Manager, WorkEdge",
-    feedback:
-      "The productivity reports and idle detection help us optimize performance without micromanaging employees.",
+    feedback: "The productivity reports help us optimize performance.",
   },
   {
     name: "Amit Verma",
     role: "CEO, DevSolutions",
-    feedback:
-      "Secure, reliable, and enterprise-ready. The desktop agent runs silently and syncs data instantly.",
+    feedback: "Secure, reliable, and enterprise-ready system.",
   },
   {
     name: "Neha Kapoor",
     role: "Operations Head, ScaleUp",
-    feedback:
-      "TeamTrack gives us full transparency across departments. Reports are detailed and extremely helpful.",
+    feedback: "Full transparency across departments.",
   },
   {
     name: "Rohit Sharma",
     role: "Project Manager, CodeLabs",
-    feedback:
-      "Managing remote developers is now simple. URL tracking and screenshot logs are game changers.",
+    feedback: "Managing remote developers is now simple.",
   },
   {
     name: "Anjali Verma",
     role: "Agency Owner, CreativeEdge",
-    feedback:
-      "Clients love the proof-of-work transparency. It has improved trust and billing clarity significantly.",
+    feedback: "Clients love the transparency and trust.",
   },
+  {
+    name: "Vikas Singh",
+    role: "CTO, TechFlow",
+    feedback: "Amazing tracking system with clean UI.",
+  },
+  {
+    name: "Sneha Gupta",
+    role: "Manager, BrightSoft",
+    feedback: "Highly recommend for remote teams.",
+  },
+{
+    name: "Deepak ",
+    role: "Manager, BrightSoft",
+    feedback: "Highly recommend for remote teams.",
+  },
+  {
+    name: "Manu ",
+    role: "Manager, BrightSoft",
+    feedback: "Highly recommend for remote teams.",
+  },
+  {
+    name: "Ishwar Sharma",
+    role: "Manager, BrightSoft",
+    feedback: "Highly recommend for remote teams.",
+  },
+  {
+    name: "Antim",
+    role: "Manager, BrightSoft",
+    feedback: "Highly recommend for remote teams.",
+  },
+
+
+
+
+
+
+
+
+
 ];
+
+// 🔥 AUTO SPLIT (NO SAME CONTENT)
+const mid = Math.ceil(testimonials.length / 2);
+const topRow = testimonials.slice(0, mid);
+const bottomRow = testimonials.slice(mid);
+
+// 🔥 CARD
+const Card = ({ t }: any) => (
+  <div className="min-w-[300px] max-w-[300px] p-6 rounded-xl bg-gradient-card border border-border hover:border-primary/30 transition-all duration-300 hover:shadow-glow">
+    <div className="flex mb-4">
+      {[...Array(5)].map((_, index) => (
+        <Star key={index} size={16} className="text-primary fill-primary" />
+      ))}
+    </div>
+
+    <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+      "{t.feedback}"
+    </p>
+
+    <div>
+      <h4 className="font-semibold text-foreground">{t.name}</h4>
+      <p className="text-xs text-muted-foreground">{t.role}</p>
+    </div>
+  </div>
+);
 
 const Client = () => {
   return (
     <div
-      className="min-h-screen text-white"
+      className="min-h-screen text-white overflow-hidden"
       style={{
         background: "linear-gradient(to right, #135F80, #2C7862)",
       }}
     >
-     
-
       <section className="pt-28 pb-20">
         <div className="container mx-auto px-4">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="text-center mb-14"
-          >
-            <motion.h2
-              variants={fadeUp}
-              custom={0}
-              className="text-3xl md:text-5xl font-bold mb-4"
-            >
+
+          {/* Heading */}
+          <div className="text-center mb-14">
+            <h2 className="text-3xl md:text-5xl font-bold mb-4">
               What Our <span className="text-gradient">Clients Say</span>
-            </motion.h2>
-
-            <motion.p
-              variants={fadeUp}
-              custom={1}
-              className="text-muted-foreground max-w-xl mx-auto"
-            >
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
               Trusted by startups, enterprises, agencies, and remote teams worldwide.
-            </motion.p>
-          </motion.div>
+            </p>
+          </div>
 
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            {testimonials.map((t, i) => (
-              <motion.div
-                key={t.name}
-                variants={fadeUp}
-                custom={i}
-                className="p-6 rounded-xl bg-gradient-card border border-border hover:border-primary/30 transition-all duration-300 hover:shadow-glow"
-              >
-                <div className="flex mb-4">
-                  {[...Array(5)].map((_, index) => (
-                    <Star
-                      key={index}
-                      size={16}
-                      className="text-primary fill-primary"
-                    />
-                  ))}
-                </div>
+          {/* 🔥 TOP ROW (LEFT SCROLL) */}
+          <div className="overflow-hidden mb-8">
+            <motion.div
+              className="flex gap-6"
+              animate={{ x: ["0%", "-100%"] }}
+              transition={{
+                repeat: Infinity,
+                duration: 25,
+                ease: "linear",
+              }}
+            >
+              {[...topRow, ...topRow, ...topRow].map((t, i) => (
+                <Card key={i} t={t} />
+              ))}
+            </motion.div>
+          </div>
 
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                  "{t.feedback}"
-                </p>
+          {/* 🔥 BOTTOM ROW (RIGHT SCROLL) */}
+          <div className="overflow-hidden">
+            <motion.div
+              className="flex gap-6"
+              animate={{ x: ["-100%", "0%"] }}
+              transition={{
+                repeat: Infinity,
+                duration: 25,
+                ease: "linear",
+              }}
+            >
+              {[...bottomRow, ...bottomRow, ...bottomRow].map((t, i) => (
+                <Card key={i} t={t} />
+              ))}
+            </motion.div>
+          </div>
 
-                <div>
-                  <h4 className="font-semibold text-foreground">
-                    {t.name}
-                  </h4>
-                  <p className="text-xs text-muted-foreground">
-                    {t.role}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
         </div>
       </section>
-
-     
     </div>
   );
 };

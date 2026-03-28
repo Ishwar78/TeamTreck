@@ -13,6 +13,17 @@ import { Users, Mail, UserCheck, UserX, Edit2, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+
 
 const TeamManagement = () => {
   const { token } = useAuth();
@@ -20,9 +31,13 @@ const TeamManagement = () => {
   const { canAction } = usePermissions();
 
   const [members, setMembers] = useState<any[]>([]);
+  const [customRoles, setCustomRoles] = useState<any[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<any[]>([]);
   const [search, setSearch] = useState("");
+  const [selectedRole, setSelectedRole] = useState("all");
   const [loading, setLoading] = useState(true);
+
+
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<any>(null);
@@ -40,13 +55,18 @@ const TeamManagement = () => {
 
   useEffect(() => {
     handleSearch();
-  }, [search, members]);
+  }, [search, selectedRole, members]);
+
 
   const fetchMembers = async () => {
     try {
-      const data = await apiFetch("/api/company/users", token);
-      setMembers(data.users || []);
-      setFilteredMembers(data.users || []);
+      const [membersData, rolesData] = await Promise.all([
+        apiFetch("/api/company/users", token),
+        apiFetch("/api/company/roles", token).catch(() => ({ roles: [] }))
+      ]);
+      setMembers(membersData.users || []);
+      setCustomRoles(rolesData.roles || []);
+      setFilteredMembers(membersData.users || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -54,19 +74,41 @@ const TeamManagement = () => {
     }
   };
 
+
   const handleSearch = () => {
-    if (!search) {
-      setFilteredMembers(members);
-      return;
+    let filtered = members;
+
+    if (search) {
+      filtered = filtered.filter((member) =>
+        member.name.toLowerCase().includes(search.toLowerCase()) ||
+        member.email.toLowerCase().includes(search.toLowerCase())
+      );
     }
 
-    const filtered = members.filter((member) =>
-      member.name.toLowerCase().includes(search.toLowerCase()) ||
-      member.email.toLowerCase().includes(search.toLowerCase())
-    );
+    if (selectedRole && selectedRole !== "all") {
+      filtered = filtered.filter((member) => {
+        if (selectedRole.startsWith("custom_")) {
+          const customId = selectedRole.split("_")[1];
+          return member.role === "custom" && member.custom_role_id === customId;
+        }
+        return member.role === selectedRole;
+      });
+    }
 
     setFilteredMembers(filtered);
   };
+
+  const getRoleDisplay = (role: string, customRoleId?: string) => {
+    if (role === "custom" && customRoleId) {
+      const customRole = customRoles.find(r => r._id === customRoleId);
+      return customRole ? customRole.name : "Custom Role";
+    }
+    return role.charAt(0).toUpperCase() + role.slice(1).replace('_', ' ');
+  };
+
+  const standardRoles = ["company_admin", "sub_admin", "employee", "intern", "user"];
+
+
 
   const handleEditClick = (member: any) => {
     setEditingMember(member);
@@ -177,12 +219,40 @@ const TeamManagement = () => {
                 <Trash2 size={16} /> Delete Selected ({selectedIds.length})
               </Button>
             )}
+            <Select value={selectedRole} onValueChange={setSelectedRole}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Filter by Role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectGroup>
+                  <SelectLabel>Standard Roles</SelectLabel>
+                  {standardRoles.map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role.charAt(0).toUpperCase() + role.slice(1).replace('_', ' ')}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+                {customRoles.length > 0 && (
+                  <SelectGroup>
+                    <SelectLabel>Custom Roles</SelectLabel>
+                    {customRoles.map((role) => (
+                      <SelectItem key={role._id} value={`custom_${role._id}`}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                )}
+              </SelectContent>
+
+            </Select>
             <Input
               placeholder="Search by name or email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full sm:w-72"
             />
+
           </div>
         </div>
 
@@ -264,9 +334,10 @@ const TeamManagement = () => {
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">
-                          {member.role}
+                          {getRoleDisplay(member.role, member.custom_role_id)}
                         </Badge>
                       </TableCell>
+
                       <TableCell>
                         <Badge>
                           {member.status}
