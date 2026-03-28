@@ -30,6 +30,8 @@ const AppUsage = () => {
   const [appSearch, setAppSearch] = useState("");
   const [urlSearch, setUrlSearch] = useState("");
   
+  const [userSearch, setUserSearch] = useState("");
+
   const formatDuration = (totalSeconds: number) => {
     const hrs = Math.floor(totalSeconds / 3600);
     const mins = Math.floor((totalSeconds % 3600) / 60);
@@ -51,6 +53,9 @@ const AppUsage = () => {
       fetchUsage();
     }
   }, [token, selectedUser, period]);
+
+
+
 
   const fetchEmployees = async () => {
     try {
@@ -127,7 +132,9 @@ const AppUsage = () => {
   const toggleApp = (appName: string) => {
     setExpandedApps(prev => ({ ...prev, [appName]: !prev[appName] }));
   };
-
+const filteredEmployees = employees.filter((u) =>
+  u.name.toLowerCase().includes(userSearch.toLowerCase())
+);
 
   const periodLabel = period === "today" ? "Today" : period === "week" ? "This Week" : "This Month";
   const userName = employees.find(e => e.id === selectedUser)?.name || "All Users";
@@ -154,7 +161,7 @@ const AppUsage = () => {
 
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-3 p-4 rounded-xl bg-gradient-card border border-border">
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <User size={14} className="text-muted-foreground" />
               <Select value={selectedUser} onValueChange={setSelectedUser}>
                 <SelectTrigger className="w-[180px] h-9"><SelectValue /></SelectTrigger>
@@ -162,7 +169,38 @@ const AppUsage = () => {
                   {employees.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
+            <div className="flex flex-col gap-1">
+  <div className="flex items-center gap-2">
+    <User size={14} className="text-muted-foreground" />
+    <Select value={selectedUser} onValueChange={setSelectedUser}>
+      <SelectTrigger className="w-[200px] h-9">
+        <SelectValue placeholder="Select user" />
+      </SelectTrigger>
+
+      <SelectContent>
+        {/* 🔍 Search Input */}
+        <div className="p-2">
+          <input
+            type="text"
+            placeholder="Search user..."
+            value={userSearch}
+            onChange={(e) => setUserSearch(e.target.value)}
+            
+            className="w-full h-8 px-2 text-sm border rounded-md bg-background"
+          />
+        </div>
+
+        {/* 👇 Filtered Users */}
+        {filteredEmployees.map((e) => (
+          <SelectItem key={e.id} value={e.id}>
+            {e.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+</div>
             <div className="flex items-center gap-2">
               <Calendar size={14} className="text-muted-foreground" />
               <Select value={period} onValueChange={setPeriod}>

@@ -536,13 +536,14 @@ router.put('/users/:id/role', authenticate, requireRole('company_admin'), async 
 /* ================= CUSTOM ROLES ================= */
 router.post('/roles', authenticate, requireRole('company_admin'), async (req, res, next) => {
   try {
-    const { name, permissions } = req.body;
+    const { name, permissions, isActive } = req.body;
     if (!name) throw new AppError('Role name is required', 400);
 
     const role = await CustomRole.create({
       company_id: req.auth!.company_id,
       name,
-      permissions: permissions || {}
+      permissions: permissions || {},
+      isActive: isActive !== undefined ? isActive : true
     });
 
     res.status(201).json({ success: true, role });
@@ -558,10 +559,15 @@ router.get('/roles', authenticate, requireRole('company_admin'), async (req, res
 
 router.put('/roles/:id', authenticate, requireRole('company_admin'), async (req, res, next) => {
   try {
-    const { name, permissions } = req.body;
+    const { name, permissions, isActive } = req.body;
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (permissions !== undefined) updateData.permissions = permissions;
+    if (isActive !== undefined) updateData.isActive = isActive;
+
     const role = await CustomRole.findOneAndUpdate(
       { _id: req.params.id, company_id: req.auth!.company_id },
-      { name, permissions },
+      updateData,
       { new: true }
     );
     if (!role) throw new AppError('Role not found', 404);

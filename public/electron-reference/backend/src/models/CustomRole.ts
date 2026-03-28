@@ -6,6 +6,7 @@ export interface ICustomRole extends Document {
   permissions: {
     [module: string]: boolean;
   };
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,6 +27,10 @@ const CustomRoleSchema = new Schema<ICustomRole>(
     permissions: {
       type: Schema.Types.Mixed,
       default: {},
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   { timestamps: true }

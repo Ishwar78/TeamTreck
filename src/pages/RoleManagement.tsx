@@ -171,6 +171,20 @@ const RoleManagement = () => {
     }
   };
 
+  const handleToggleRoleStatus = async (roleId: string, currentStatus: boolean) => {
+    try {
+      const res = await apiFetch(`/api/company/roles/${roleId}`, token, {
+        method: "PUT",
+        body: { isActive: !currentStatus }
+      });
+      if (res.success && res.role) {
+        setCustomRoles(prev => prev.map(r => r._id === roleId ? res.role : r));
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to toggle role status");
+    }
+  };
+
   const handleDeleteRole = async (roleId: string) => {
     if (!confirm("Are you sure you want to delete this custom role?")) return;
     try {
@@ -273,9 +287,9 @@ const RoleManagement = () => {
                               <option value="user">User</option>
                             </optgroup>
                             
-                            {customRoles.length > 0 && (
+                            {customRoles.filter(cr => cr.isActive !== false).length > 0 && (
                               <optgroup label="Custom Matrix Roles">
-                                {customRoles.map(cr => (
+                                {customRoles.filter(cr => cr.isActive !== false).map(cr => (
                                   <option key={cr._id} value={`custom_${cr._id}`}>{cr.name}</option>
                                 ))}
                               </optgroup>
@@ -309,34 +323,47 @@ const RoleManagement = () => {
              <div className="p-8 text-center text-muted-foreground">No custom roles built yet. Create one!</div>
            ) : (
              <div className="overflow-x-auto">
-               <table className="w-full text-left text-sm whitespace-nowrap">
-                 <thead className="bg-secondary/50 text-muted-foreground">
-                   <tr>
-                     <th className="px-6 py-4 font-medium uppercase text-xs">Role Title</th>
-                     <th className="px-6 py-4 font-medium uppercase text-xs">Matrix Highlights</th>
-                     <th className="px-6 py-4 font-medium uppercase text-xs text-right">Actions</th>
-                   </tr>
-                 </thead>
-                 <tbody className="divide-y divide-border">
-                   {customRoles.map((r) => (
-                     <tr key={r._id} className="hover:bg-secondary/20 transition-colors">
-                       <td className="px-6 py-4 text-foreground font-medium">{r.name}</td>
-                       <td className="px-6 py-4 text-muted-foreground bg-secondary/10 border-l border-r border-border min-w-[300px] overflow-hidden truncate">
-                          <code className="text-xs">{Object.keys(r.permissions || {}).filter(k => r.permissions[k]).length} Modules Active</code>
-                       </td>
-                       <td className="px-6 py-4 text-right flex justify-end gap-2">
-                         <button onClick={() => handleRoleModalOpen(r)} className="text-blue-500 hover:text-blue-600 p-1 bg-blue-500/10 rounded" title="View / Edit Role">
-                           <Edit2 size={16} />
-                         </button>
-                         <button onClick={() => handleDeleteRole(r._id)} className="text-red-500 hover:text-red-400 p-1 bg-red-500/10 rounded" title="Delete Role">
-                           <Trash2 size={16} />
-                         </button>
-                       </td>
-                     </tr>
-                   ))}
-                 </tbody>
-               </table>
-             </div>
+                <table className="w-full text-left text-sm whitespace-nowrap">
+                  <thead className="bg-secondary/50 text-muted-foreground">
+                    <tr>
+                      <th className="px-6 py-4 font-medium uppercase text-xs">Role Title</th>
+                      <th className="px-6 py-4 font-medium uppercase text-xs">Status</th>
+                      <th className="px-6 py-4 font-medium uppercase text-xs">Matrix Highlights</th>
+                      <th className="px-6 py-4 font-medium uppercase text-xs text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {customRoles.map((r) => (
+                      <tr key={r._id} className="hover:bg-secondary/20 transition-colors">
+                        <td className="px-6 py-4 text-foreground font-medium">{r.name}</td>
+                        <td className="px-6 py-4">
+                          <button 
+                            onClick={() => handleToggleRoleStatus(r._id, r.isActive !== false)}
+                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold transition-colors ${
+                              r.isActive !== false 
+                                ? "bg-green-500/10 text-green-500 hover:bg-green-500/20" 
+                                : "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                            }`}
+                          >
+                            {r.isActive !== false ? "Active" : "Inactive"}
+                          </button>
+                        </td>
+                        <td className="px-6 py-4 text-muted-foreground bg-secondary/10 border-l border-r border-border min-w-[300px] overflow-hidden truncate">
+                           <code className="text-xs">{Object.keys(r.permissions || {}).filter(k => r.permissions[k]).length} Modules Active</code>
+                        </td>
+                        <td className="px-6 py-4 text-right flex justify-end gap-2">
+                          <button onClick={() => handleRoleModalOpen(r)} className="text-blue-500 hover:text-blue-600 p-1 bg-blue-500/10 rounded" title="View / Edit Role">
+                            <Edit2 size={16} />
+                          </button>
+                          <button onClick={() => handleDeleteRole(r._id)} className="text-red-500 hover:text-red-400 p-1 bg-red-500/10 rounded" title="Delete Role">
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
            )}
          </div>
         )}
@@ -394,9 +421,9 @@ const RoleManagement = () => {
                     <option value="intern">Intern</option>
                     <option value="user">User</option>
                   </optgroup>
-                  {customRoles.length > 0 && (
+                  {customRoles.filter(cr => cr.isActive !== false).length > 0 && (
                     <optgroup label="Custom Matrix Roles">
-                      {customRoles.map(cr => (
+                      {customRoles.filter(cr => cr.isActive !== false).map(cr => (
                         <option key={cr._id} value={`custom_${cr._id}`}>{cr.name}</option>
                       ))}
                     </optgroup>

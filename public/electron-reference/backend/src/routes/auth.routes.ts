@@ -169,7 +169,9 @@ authRoutes.post(
           role: user.role,
           company_id: user.company_id || null,
           companyName: company?.name || null,
-          customPermissions: user.custom_role_id ? (user.custom_role_id as any).permissions : undefined,
+          customPermissions: (user.custom_role_id && (user.custom_role_id as any).isActive !== false) 
+            ? (user.custom_role_id as any).permissions 
+            : (user.role === 'custom' ? {} : undefined),
         },
       });
     } catch (err) {
@@ -200,10 +202,14 @@ authRoutes.post(
       }
 
       // OPTIONAL: verify user still exists
-      const user = await User.findById(decoded.user_id);
+      const user = await User.findById(decoded.user_id).populate('custom_role_id');
       if (!user || user.status !== "active") {
         throw new AppError("User no longer valid", 401);
       }
+
+      const permissions = (user.custom_role_id && (user.custom_role_id as any).isActive !== false)
+        ? (user.custom_role_id as any).permissions
+        : (user.role === 'custom' ? {} : undefined);
 
       const tokens = generateTokens({
         user_id: user._id.toString(),
@@ -212,6 +218,7 @@ authRoutes.post(
           : null,
         role: user.role,
         device_id: decoded.device_id,
+        customPermissions: permissions
       });
 
       res.json({
