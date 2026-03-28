@@ -61,11 +61,76 @@ const steps: { id: StepId; label: string; icon: React.ElementType }[] = [
   { id: "invite", label: "Invite Team", icon: Users },
   { id: "complete", label: "Complete", icon: Rocket },
 ];
-
 const industries = [
-  "Technology", "Finance", "Healthcare", "Education", "Marketing",
-  "Consulting", "E-commerce", "Manufacturing", "Media", "Other",
+  "Technology",
+  "Finance",
+  "Healthcare",
+  "Education",
+  "Marketing",
+  "Consulting",
+  "E-commerce",
+  "Manufacturing",
+  "Media",
+  "Real Estate",
+  "Construction",
+  "Transportation & Logistics",
+  "Hospitality",
+  "Travel & Tourism",
+  "Retail",
+  "Automotive",
+  "Telecommunications",
+  "Energy & Utilities",
+  "Pharmaceutical",
+  "Insurance",
+  "Agriculture",
+  "Food & Beverage",
+  "Entertainment",
+  "Sports",
+  "Legal Services",
+  "Human Resources",
+  "Non-Profit",
+  "Government",
+  "Cybersecurity",
+  "Artificial Intelligence",
+  "Blockchain",
+  "Gaming",
+  "Fashion & Apparel",
+  "Beauty & Cosmetics",
+  "Other"
 ];
+
+const countries = [
+  "India",
+  "United States",
+  "United Kingdom",
+  "Canada",
+  "Australia",
+  "Germany",
+  "France",
+  "Italy",
+  "Spain",
+  "Netherlands",
+  "Brazil",
+  "Mexico",
+  "Japan",
+  "China",
+  "South Korea",
+  "Singapore",
+  "UAE",
+  "Saudi Arabia",
+  "South Africa",
+  "Russia",
+  "Other"
+];
+
+
+
+
+
+
+
+
+
 
 const companySizes = ["0-5","1-10", "11-25", "26-50", "51-100", "100+"];
 
@@ -127,17 +192,23 @@ const CompanyStep = ({ data, onChange }: { data: CompanyData; onChange: (d: Comp
     </div>
 
     <div>
-      <Label>Country</Label>
-      <div className="relative mt-1.5">
-        <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="United States"
-          value={data.country}
-          onChange={(e) => onChange({ ...data, country: e.target.value })}
-          className="pl-9"
-        />
-      </div>
-    </div>
+  <Label>Country *</Label>
+  <Select
+    value={data.country}
+    onValueChange={(v) => onChange({ ...data, country: v })}
+  >
+    <SelectTrigger className="mt-1.5">
+      <SelectValue placeholder="Select country" />
+    </SelectTrigger>
+    <SelectContent>
+      {countries.map((c) => (
+        <SelectItem key={c} value={c}>
+          {c}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
   </div>
 );
 
@@ -254,7 +325,7 @@ const PlanStep = ({ data, onChange, plans, loading }: { data: PlanData; onChange
                 </div>
               </div>
               <div className="text-2xl font-bold text-foreground">
-                ${plan.price}<span className="text-xs text-muted-foreground font-normal">/mo</span>
+                 ₹{plan.price}<span className="text-xs text-muted-foreground font-normal">/mo</span>
               </div>
               <ul className="mt-3 space-y-1.5">
                 {(plan.features ?? []).map(f => (
@@ -269,11 +340,11 @@ const PlanStep = ({ data, onChange, plans, loading }: { data: PlanData; onChange
       </div>
     )}
 
-    <div className="rounded-lg bg-secondary/30 border border-border p-3 text-center">
+    {/* <div className="rounded-lg bg-secondary/30 border border-border p-3 text-center">
       <p className="text-xs text-muted-foreground">
         🎉 <strong className="text-foreground">14-day free trial</strong> on all plans. No credit card required to start.
       </p>
-    </div>
+    </div> */}
   </div>
 );
 
@@ -458,7 +529,7 @@ const Onboarding = () => {
 
   const canProceed = () => {
     switch (currentStep) {
-      case 0: return companyData.name.trim() !== "" && companyData.industry !== "" && companyData.size !== "";
+      case 0: return companyData.name.trim() !== "" && companyData.industry !== "" && companyData.size !== ""&& companyData.country !== "";
       case 1: return adminData.firstName.trim() !== "" && adminData.lastName.trim() !== "" && adminData.email.trim() !== "" && adminData.password.length >= 8 && adminData.password === adminData.confirmPassword;
       case 2: return planData.selectedPlan !== "";
       case 3: return true;
@@ -467,7 +538,48 @@ const Onboarding = () => {
     }
   };
 
-  const handleNext = () => {
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+
+  const handleNext = async () => {
+    // 0 -> 1: Check Domain Availability
+    if (currentStep === 0) {
+      setCheckingAvailability(true);
+      try {
+        const domain = companyData.website
+          ? companyData.website.replace(/^https?:\/\//, "")
+          : companyData.name.toLowerCase().replace(/\s+/g, "");
+        const res = await fetch(`${API}/api/public/verify-availability?domain=${encodeURIComponent(domain)}`);
+        if (!res.ok) {
+           const errorData = await res.json().catch(() => ({}));
+           throw new Error(errorData.message || `Server Error (${res.status})`);
+        }
+        await res.json();
+      } catch (err: any) {
+        toast({ title: "Availability Check", description: err.message, variant: "destructive" });
+        setCheckingAvailability(false);
+        return;
+      }
+      setCheckingAvailability(false);
+    }
+
+    // 1 -> 2: Check Email Availability
+    if (currentStep === 1) {
+      setCheckingAvailability(true);
+      try {
+        const res = await fetch(`${API}/api/public/verify-availability?email=${encodeURIComponent(adminData.email)}`);
+        if (!res.ok) {
+           const errorData = await res.json().catch(() => ({}));
+           throw new Error(errorData.message || `Server Error (${res.status})`);
+        }
+        await res.json();
+      } catch (err: any) {
+        toast({ title: "Availability Check", description: err.message, variant: "destructive" });
+        setCheckingAvailability(false);
+        return;
+      }
+      setCheckingAvailability(false);
+    }
+
     // When moving from Plan step (2) to Invite step (3), trigger registration + Razorpay
     if (currentStep === 2) {
       handleComplete();
@@ -575,40 +687,43 @@ const Onboarding = () => {
     setProcessing(true);
 
     try {
-      /* ================= 1️⃣ REGISTER COMPANY ================= */
-
-      const registerRes = await fetch(`${API}/api/company/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          companyName: companyData.name,
-          domain: companyData.website
-            ? companyData.website.replace(/^https?:\/\//, "")
-            : companyData.name.toLowerCase().replace(/\s+/g, ""),
-          adminName: `${adminData.firstName} ${adminData.lastName}`,
-          email: adminData.email,
-          password: adminData.password,
-        }),
-      });
-
-      const registerData = await registerRes.json();
-      if (!registerRes.ok) {
-        throw new Error(registerData.message || "Registration failed");
-      }
-
-      const companyId = registerData.company;
-
-      /* ================= 2️⃣ FIND SELECTED PLAN ================= */
-
+      /* ================= 1️⃣ PREPARE DATA ================= */
       const selectedPlan = plans.find((p) => p.id === planData.selectedPlan);
-
       if (!selectedPlan) {
         throw new Error("Please select a plan before continuing.");
       }
 
-      /* ================= 3️⃣ BYPASS PAYMENT FOR FREE PLANS ================= */
+      const regData = {
+        companyName: companyData.name,
+        domain: companyData.website
+          ? companyData.website.replace(/^https?:\/\//, "")
+          : companyData.name.toLowerCase().replace(/\s+/g, ""),
+        adminName: `${adminData.firstName} ${adminData.lastName}`,
+        email: adminData.email,
+        password: adminData.password,
+        country: companyData.country,
+         industry: companyData.industry,   
+  size: companyData.size,  
+      };
+
+      let companyId = null;
+
+      /* ================= 2️⃣ HANDLE REGISTRATION (FREE VS PAID) ================= */
       if (selectedPlan.price === 0) {
-        // Directly auto-login and complete step since it's free
+        // FREE PLAN: Register immediately
+        const registerRes = await fetch(`${API}/api/company/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(regData),
+        });
+
+        const registerData = await registerRes.json();
+        if (!registerRes.ok) {
+          throw new Error(registerData.message || "Registration failed");
+        }
+        companyId = registerData.company;
+
+        // Auto-login for free plan
         const loginRes = await fetch(`${API}/api/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -623,33 +738,26 @@ const Onboarding = () => {
 
         const loginData = await loginRes.json();
         if (!loginRes.ok) {
-          throw new Error(loginData.message || "Auto-login failed after registration.");
+          throw new Error(loginData.message || "Auto-login failed.");
         }
 
         localStorage.setItem("token", loginData.token);
-        if (loginData.refreshToken) {
-          localStorage.setItem("refreshToken", loginData.refreshToken);
-        }
+        if (loginData.refreshToken) localStorage.setItem("refreshToken", loginData.refreshToken);
         localStorage.setItem("user", JSON.stringify(loginData.user));
 
-        toast({
-          title: "Registration Successful 🎉",
-          description: "Your free plan is active.",
-        });
-
+        toast({ title: "Registration Successful 🎉", description: "Your free plan is active." });
         setProcessing(false);
         setCurrentStep(4);
         return;
       }
 
-      /* ================= 4️⃣ CREATE ORDER (PAID PLANS ONLY) ================= */
-
+      /* ================= 3️⃣ PAID PLAN: CREATE ORDER WITHOUT COMPANY (DEFERRED) ================= */
       const orderRes = await fetch(`${API}/api/payment/create-order`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           planId: selectedPlan.id,
-          companyId,
+          regData // PASS REG DATA TO BE STORED IN NOTES
         }),
       });
 
@@ -682,8 +790,9 @@ const Onboarding = () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               ...response,
-              companyId,
               planId: selectedPlan.id,
+              // companyId might be null for deferred reg, backend will handle via notes
+              companyId 
             }),
           });
 
@@ -692,12 +801,15 @@ const Onboarding = () => {
           if (!verifyRes.ok || !verifyData.success) {
             toast({
               title: "Error",
-              description: "Payment verification failed",
+              description: verifyData.message || "Payment verification failed",
               variant: "destructive",
             });
             setProcessing(false);
             return;
           }
+
+          // Use companyId returned from verify (in case it was just created)
+          const finalCompanyId = verifyData.companyId || companyId;
 
           /* ================= 7️⃣ AUTO LOGIN ================= */
 
@@ -839,8 +951,8 @@ const Onboarding = () => {
                     <Rocket size={14} /> Go to Dashboard
                   </Button>
                 ) : (
-                  <Button onClick={handleNext} disabled={!canProceed() || processing} className="gap-1">
-                    {processing ? "Processing..." : <>Continue <ArrowRight size={14} /></>}
+                  <Button onClick={handleNext} disabled={!canProceed() || processing || checkingAvailability} className="gap-1">
+                    {processing ? "Processing..." : checkingAvailability ? "Checking..." : <>Continue <ArrowRight size={14} /></>}
                   </Button>
                 )}
               </div>

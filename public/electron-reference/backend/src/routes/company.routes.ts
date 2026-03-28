@@ -43,6 +43,25 @@ router.post('/register', async (req, res, next) => {
 
     const existing = await Company.findOne({ domain: domain.toLowerCase() });
     if (existing) {
+      // If domain already exists, check if it's the same owner retrying onboarding
+      const existingUser = await User.findOne({ 
+        company_id: existing._id, 
+        email: email.toLowerCase(),
+        role: 'company_admin'
+      }).select('+password_hash');
+
+      if (existingUser) {
+        // Authenticate with password (using bcrypt)
+        const passwordMatch = await bcrypt.compare(password, existingUser.password_hash);
+        if (passwordMatch) {
+          // Success: Already exists, already yours. Return the IDs.
+          return res.status(200).json({
+            company: existing._id,
+            admin: existingUser._id,
+          });
+        }
+        return res.status(400).json({ success: false, message: 'Domain already exists' });
+      }
       return res.status(400).json({ success: false, message: 'Domain already exists' });
     }
 

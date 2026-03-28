@@ -35,20 +35,36 @@ const Footer = () => (
             </button>
           </Link>
 
+         
           {/* Social Icons */}
-          <div className="mt-8">
-            <h4 className="font-semibold mb-3">Connect</h4>
-            <div className="flex gap-4">
-              {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
-                <div
-                  key={i}
-                  className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center hover:bg-white hover:text-[#135F80] transition cursor-pointer"
-                >
-                  <Icon size={16} />
-                </div>
-              ))}
-            </div>
-          </div>
+<div className="mt-8">
+  <h4 className="font-semibold mb-3">Connect</h4>
+
+  <div className="flex gap-4">
+
+    {[
+      { icon: Facebook, link: "https://www.facebook.com/multicloutservices" },
+      { icon: Twitter, link: "https://x.com/multiclout" },
+      { icon: Instagram, link: "https://instagram.com" },
+      { icon: Linkedin, link: "https://linkedin.com" },
+    ].map((item, i) => {
+      const Icon = item.icon;
+
+      return (
+        <a
+          key={i}
+          href={item.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center hover:bg-white hover:text-[#135F80] transition cursor-pointer"
+        >
+          <Icon size={16} />
+        </a>
+      );
+    })}
+
+  </div>
+</div>
         </div>
 
         {/* Features */}

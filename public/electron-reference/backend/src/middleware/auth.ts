@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 import { AppError } from '../utils/errors';
 import { Company } from '../models/Company';
+import { User } from '../models/User';
+import { ICustomRole } from '../models/CustomRole';
 import type { AuthPayload } from '../types';
 
 export async function authenticate(
@@ -53,7 +55,6 @@ export async function authenticate(
     }
 
     req.auth = payload;
-    console.log('Auth middleware passed for user:', payload.user_id, 'role:', payload.role);
 
     // Skip expiration check for super admins, authentication routes, and payment routes
     if (
@@ -61,6 +62,22 @@ export async function authenticate(
       !req.originalUrl.startsWith('/api/auth') &&
       !req.originalUrl.startsWith('/api/payment')
     ) {
+      // 1️⃣ CHECK USER AND ROLE STATUS (IMMEDIATE KILL SWITCH)
+      const user = await User.findById(payload.user_id).populate('custom_role_id');
+      if (!user) throw new AppError('User account not found', 401);
+
+      if (user.status !== 'active') {
+        throw new AppError(`Your account is currently ${user.status}. Please contact support or your administrator.`, 403);
+      }
+
+      if (user.role === 'custom' && user.custom_role_id) {
+        const role = user.custom_role_id as unknown as ICustomRole;
+        if (role.isActive === false) {
+          throw new AppError('Your assigned role has been deactivated by the administrator. Please contact your company admin.', 403);
+        }
+      }
+
+      // 2️⃣ CHECK COMPANY SUBSCRIPTION STATUS
       if (payload.company_id) {
         const company = await Company.findById(payload.company_id);
         if (company) {
