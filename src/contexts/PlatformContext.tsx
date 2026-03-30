@@ -106,6 +106,7 @@ export const PlatformProvider = ({ children }: { children: ReactNode }) => {
           users: p.max_users,
           screenshots: `${p.screenshots_per_hour}/hr`,
           retention: p.data_retention,
+          popular: p.isPopular,
         }));
 
         setPlans(mappedPlans);
@@ -137,6 +138,7 @@ export const PlatformProvider = ({ children }: { children: ReactNode }) => {
       screenshots_per_hour: parseInt(planData.screenshots) || 12,
       data_retention: planData.retention,
       features: planData.features,
+      isPopular: planData.popular,
       isActive: true,
     };
 
@@ -152,6 +154,7 @@ export const PlatformProvider = ({ children }: { children: ReactNode }) => {
     if (updates.screenshots !== undefined) mappedUpdates.screenshots_per_hour = parseInt(updates.screenshots);
     if (updates.retention !== undefined) mappedUpdates.data_retention = updates.retention;
     if (updates.features !== undefined) mappedUpdates.features = updates.features;
+    if (updates.popular !== undefined) mappedUpdates.isPopular = updates.popular;
 
     await api.put(`/plans/${id}`, mappedUpdates);
     fetchData();

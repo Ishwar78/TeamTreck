@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -458,15 +459,19 @@ function PlansTab() {
   const { toast } = useToast();
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", price: 0, users: "", screenshots: "12", retention: "1 Month" });
-  const [editForm, setEditForm] = useState({ id: "", name: "", price: 0, users: "", screenshots: "12", retention: "1 Month" });
+  const [form, setForm] = useState({ name: "", price: 0, users: "", screenshots: "12", retention: "1 Month", features: "", popular: false });
+  const [editForm, setEditForm] = useState({ id: "", name: "", price: 0, users: "", screenshots: "12", retention: "1 Month", features: "", popular: false });
 
   const handleCreate = async () => {
     try {
-      await addPlan({ ...form, users: Number(form.users) || 5 });
+      await addPlan({ 
+        ...form, 
+        users: Number(form.users) || 5,
+        features: form.features.split("\n").filter(f => f.trim() !== "")
+      });
       toast({ title: "Success", description: "Plan created" });
       setCreateOpen(false);
-      setForm({ name: "", price: 0, users: "", screenshots: "12", retention: "1 Month" });
+      setForm({ name: "", price: 0, users: "", screenshots: "12", retention: "1 Month", features: "", popular: false });
     } catch (e) { toast({ title: "Error", description: "Failed to create plan", variant: "destructive" }); }
   };
 
@@ -475,9 +480,11 @@ function PlansTab() {
       id: plan.id,
       name: plan.name,
       price: plan.price,
-      users: String(plan.users),
+       users: String(plan.users),
       screenshots: String(plan.screenshots).replace("/hr", ""),
-      retention: plan.retention
+      retention: plan.retention,
+      features: (plan.features || []).join("\n"),
+      popular: plan.popular || false
     });
     setEditOpen(true);
   };
@@ -489,7 +496,9 @@ function PlansTab() {
         price: Number(editForm.price),
         users: Number(editForm.users),
         screenshots: editForm.screenshots,
-        retention: editForm.retention
+        retention: editForm.retention,
+        features: editForm.features.split("\n").filter(f => f.trim() !== ""),
+        popular: editForm.popular
       });
       toast({ title: "Success", description: "Plan updated" });
       setEditOpen(false);
@@ -519,10 +528,19 @@ function PlansTab() {
               </div>
               <Badge variant="secondary">{plan.active} active</Badge>
             </div>
+            {plan.popular && (
+              <Badge className="mb-4 bg-cyan-500/20 text-cyan-400 border-cyan-500/50">Most Popular</Badge>
+            )}
             <ul className="space-y-3 mb-6 text-sm text-gray-400">
               <li>Max Users: {plan.users}</li>
               <li>Screenshots: {plan.screenshots}</li>
               <li>Retention: {plan.retention}</li>
+              {(plan.features || []).map((f: string, idx: number) => (
+                <li key={idx} className="flex items-center gap-2">
+                  <CheckCircle2 size={12} className="text-cyan-500" />
+                  {f}
+                </li>
+              ))}
             </ul>
             <div className="grid grid-cols-2 gap-2">
               <Button variant="outline" className="w-full border-gray-700 hover:bg-gray-800" onClick={() => handleEditClick(plan)}>Edit</Button>
@@ -541,6 +559,19 @@ function PlansTab() {
             <Input placeholder="Max Users" value={form.users} onChange={e => setForm({ ...form, users: e.target.value })} />
             <Input placeholder="Screenshots per hour" value={form.screenshots} onChange={e => setForm({ ...form, screenshots: e.target.value })} />
             <Input placeholder="Data Retention" value={form.retention} onChange={e => setForm({ ...form, retention: e.target.value })} />
+            <div className="space-y-2">
+              <Label>Plan Features (one per line)</Label>
+              <Textarea 
+                placeholder="Advanced reporting&#10;API access" 
+                value={form.features} 
+                onChange={e => setForm({ ...form, features: e.target.value })} 
+                className="min-h-[100px]"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Most Popular</Label>
+              <Switch checked={form.popular} onCheckedChange={v => setForm({ ...form, popular: v })} />
+            </div>
           </div>
           <DialogFooter><Button onClick={handleCreate}>Create</Button></DialogFooter>
         </DialogContent>
@@ -569,6 +600,19 @@ function PlansTab() {
             <div className="space-y-2">
               <Label>Data Retention</Label>
               <Input placeholder="Retention" value={editForm.retention} onChange={e => setEditForm({ ...editForm, retention: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Plan Features (one per line)</Label>
+              <Textarea 
+                placeholder="Advanced reporting&#10;API access" 
+                value={editForm.features} 
+                onChange={e => setEditForm({ ...editForm, features: e.target.value })} 
+                className="min-h-[100px]"
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Most Popular</Label>
+              <Switch checked={editForm.popular} onCheckedChange={v => setEditForm({ ...editForm, popular: v })} />
             </div>
           </div>
           <DialogFooter><Button onClick={handleUpdate}>Update Plan</Button></DialogFooter>

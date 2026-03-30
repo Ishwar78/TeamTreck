@@ -41,16 +41,22 @@ const menuItems: MenuItem[] = [
   { icon: CalendarCheck, label: "Attendance", path: "/dashboard/attendance", permission: "view_attendance", module: "attendance" },
   // { icon: PlayCircle, label: "Sessions", path: "/dashboard/sessions", permission: "view_sessions" },
 
+
   // ✅ Chat
  { icon: MessageCircle, label: "Chat", path: "/dashboard/chat", permission: "view_team", module: "chat" },
 // ✅ Task
 { icon: CheckSquare, label: "Tasks", path: "/dashboard/task", permission: "view_dashboard", module: "tasks" },
+
+
+// ✅ NEW ADD
+{ icon: BarChart3, label: "Daily Report", path: "/dashboard/daily-report", permission: "view_daily_reports", module: "daily_reports" },
 
 { icon: ShieldBan, label: "Role Management", path: "/dashboard/roles", permission: "manage_roles", module: "roles" },
 
   { icon: CreditCard, label: "Billing", path: "/dashboard/billing", permission: "manage_billing", module: "billing" },
   // { icon: Settings, label: "Settings", path: "/dashboard/settings", permission: "manage_settings", module: "settings" },
   { icon: LifeBuoy, label: "Support Tickets", path: "/dashboard/support", permission: "manage_settings", module: "support" },
+
 
 ];
 

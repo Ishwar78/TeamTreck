@@ -19,8 +19,9 @@ import { paymentRoutes } from "./routes/payment.routes";
 import { claimRoutes } from "./routes/claim.routes";
 import { reportRoutes } from "./routes/reports.routes";
 import { taskRoutes } from "./routes/task.routes";
-import { notificationRoutes } from "./routes/notification.routes";
+import {notificationRoutes } from "./routes/notification.routes";
 import {chatRoutes } from "./routes/chat.routes";
+import { dailyReportRoutes } from "./routes/dailyReport.routes";
 
 const app = express();
 
@@ -102,6 +103,7 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/chat",chatRoutes);
+app.use("/api/daily-report", dailyReportRoutes);
 /* ================= ERROR HANDLER ================= */
 app.use(errorHandler);
 

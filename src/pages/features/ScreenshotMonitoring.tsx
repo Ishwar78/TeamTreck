@@ -88,7 +88,7 @@ const ScreenshotMonitoring = () => (
       </div>
     </section>
 
-{/* Why TeamTrack’s Screenshot Feature */}
+{/* Why  Screenshot Feature */}
 <section className="py-24">
   <div className="container mx-auto px-4">
 
@@ -103,7 +103,7 @@ const ScreenshotMonitoring = () => (
         custom={0}
         className="text-3xl md:text-4xl font-bold text-foreground"
       >
-        Why MULTICLOUTTeamTrex’s <span className="text-gradient">Screenshot Feature</span>
+        Why MULTICLOUT TeamTrex’s <span className="text-gradient">Screenshot Feature</span>
       </motion.h2>
     </motion.div>
 
@@ -179,7 +179,7 @@ const ScreenshotMonitoring = () => (
         </h3>
 
         <p className="text-lg text-white/80 leading-relaxed">
-          TeamTrack captures screenshots every 5, 10, or custom-set intervals
+          Multiclout captures screenshots every 5, 10, or custom-set intervals
           during active sessions—fully automated and non-intrusive.
         </p>
       </motion.div>

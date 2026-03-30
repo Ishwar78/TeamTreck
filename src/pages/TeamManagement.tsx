@@ -106,8 +106,8 @@ const TeamManagement = () => {
     return role.charAt(0).toUpperCase() + role.slice(1).replace('_', ' ');
   };
 
-  const standardRoles = ["company_admin", "sub_admin", "employee", "intern", "user"];
-
+  // const standardRoles = ["company_admin", "sub_admin", "employee", "intern", "user"];
+const standardRoles = ["company_admin",  "employee", "intern", ];
 
 
   const handleEditClick = (member: any) => {

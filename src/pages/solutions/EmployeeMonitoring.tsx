@@ -180,7 +180,7 @@ const EmployeeMonitoring = () => (
         custom={1}
         className="text-white/90"
       >
-        TeamTrack makes it easy to improve performance without micro-managing.
+        Multiclout makes it easy to improve performance without micro-managing.
       </motion.p>
     </motion.div>
 

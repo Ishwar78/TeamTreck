@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 // messageSound.volume = 1;
 
 
-const ChatPage = () => {
+const ChatPage = () => { 
   const { token, user } = useAuth();
 const prevMessageLengthRef = useRef(0);
   const [users, setUsers] = useState<any[]>([]);
@@ -532,6 +532,11 @@ const testNotification = () => {
                     <div className={`text-[9px] mt-1 opacity-60 text-right leading-none`}>
                       {formatMessageDate(m.createdAt)}
                     </div>
+                    {isMe && (
+  <div className="text-[10px] text-right opacity-70">
+    {m.seen ? "✅ Seen" : "✔ Sent"}
+  </div>
+)}
                   </div>
 
               </div>

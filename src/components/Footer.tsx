@@ -43,8 +43,8 @@ const Footer = () => (
   <div className="flex gap-4">
 
     {[
-      { icon: Facebook, link: "https://www.facebook.com/multicloutservices" },
-      { icon: Twitter, link: "https://x.com/multiclout" },
+      { icon: Facebook, link: "https://www.facebook.com/" },
+      { icon: Twitter, link: "" },
       { icon: Instagram, link: "https://instagram.com" },
       { icon: Linkedin, link: "https://linkedin.com" },
     ].map((item, i) => {

@@ -108,7 +108,7 @@ const TeamManagementFeature = () => (
         custom={1}
         className="text-lg text-muted-foreground"
       >
-        TeamTreck gives you the tools to lead your team with clarity. From
+        Multiclout gives you the tools to lead your team with clarity. From
         real-time dashboards to workload reports and smart task assignment,
         you'll have everything you need to manage people and performance with ease.
       </motion.p>
@@ -257,7 +257,7 @@ const TeamManagementFeature = () => (
   </div>
 </section>
 
-{/* Why Choose TeamTrack Section */}
+{/* Why Choose  Section */}
 <section className="py-24">
   <div className="container mx-auto px-4">
 
@@ -272,7 +272,7 @@ const TeamManagementFeature = () => (
         custom={0}
         className="text-3xl md:text-4xl font-bold text-foreground"
       >
-        Why Choose <span className="text-gradient">TeamTrack</span> for Team Management
+        Why Choose <span className="text-gradient">Multiclout</span> for Team Management
       </motion.h2>
     </motion.div>
 

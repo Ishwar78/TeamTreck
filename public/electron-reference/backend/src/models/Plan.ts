@@ -8,6 +8,7 @@ export interface IPlan extends Document {
     data_retention: string;
     isActive: boolean;
     features: string[];
+    isPopular: boolean;
 }
 
 const PlanSchema = new Schema<IPlan>(
@@ -19,6 +20,7 @@ const PlanSchema = new Schema<IPlan>(
         data_retention: { type: String, default: '1 Month' },
         isActive: { type: Boolean, default: true },
         features: [String],
+        isPopular: { type: Boolean, default: false },
     },
     { timestamps: true }
 );

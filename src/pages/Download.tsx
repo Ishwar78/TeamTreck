@@ -114,7 +114,7 @@ const systemRequirements = [
 const trackingFeatures = [
   { icon: Clock, label: "Automatic Time Tracking", desc: "Active & idle time logged continuously" },
   { icon: MousePointer, label: "Idle Detection", desc: "Keyboard & mouse inactivity monitored" },
-  { icon: Camera, label: "Screenshot Capture", desc: "12 randomized screenshots per hour" },
+  { icon: Camera, label: "Screenshot Capture", desc: "Randomized screenshots per hour" },
   { icon: AppWindow, label: "App Tracking", desc: "Active application names captured" },
   { icon: Globe, label: "URL Tracking", desc: "Browser tab titles & URLs recorded" },
   { icon: HardDrive, label: "Offline Queueing", desc: "Data cached locally, synced when online" },
@@ -248,11 +248,11 @@ const DownloadPage = () => {
               <div className="border-t border-border pt-4 mt-4 space-y-2">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Shield size={14} className="text-primary" />
-                  <span>Allowed roles: <strong>Company Admin</strong>, <strong>Sub-Admin</strong>, <strong>User</strong></span>
+                  {/* <span>Allowed roles: <strong>Company Admin</strong>, <strong>Sub-Admin</strong>, <strong>User</strong></span> */}
                 </div>
                 <div className="flex items-center gap-2 text-xs text-destructive">
                   <Lock size={14} />
-                  <span>Super Admin login is <strong>NOT allowed</strong> in the agent</span>
+                  {/* <span>Super Admin login is <strong>NOT allowed</strong> in the agent</span> */}
                 </div>
               </div>
             </motion.div>
@@ -307,7 +307,7 @@ const DownloadPage = () => {
                   <AccordionTrigger className="text-sm font-semibold">Screenshot Storage & Retention</AccordionTrigger>
                   <AccordionContent className="text-sm text-muted-foreground space-y-1">
                     <p>• Screenshots uploaded to backend automatically</p>
-                    <p>• Stored securely for <strong>3 months (90 days)</strong></p>
+                    {/* <p>• Stored securely for <strong>3 months (90 days)</strong></p> */}
                     <p>• Auto-deleted via scheduled job after retention period</p>
                     <p>• Company Admin can view & download screenshots</p>
                     <p>• Users cannot delete their own screenshots</p>

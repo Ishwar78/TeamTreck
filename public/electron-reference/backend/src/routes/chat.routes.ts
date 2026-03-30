@@ -89,8 +89,26 @@ router.post("/mark-seen/:userId", authenticate, async (req: any, res) => {
 });
 
 router.post("/mark-group-seen/:groupId", authenticate, async (req: any, res) => {
-  // Simplified: mark all in group as seen for me (would usually need a separate seen-by-user model)
-  res.json({ success: true });
+  try {
+    const myId = req.auth.user_id;
+    const groupId = req.params.groupId;
+
+    await Chat.updateMany(
+      {
+        group_id: groupId,
+        sender: { $ne: myId }, // apne messages skip
+        seen: false
+      },
+      {
+        $set: { seen: true }
+      }
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Group seen error:", err);
+    res.status(500).json({ success: false });
+  }
 });
 
 /* ================= GET PEERS (Group Members) ================= */
@@ -214,12 +232,23 @@ router.get("/:userId", authenticate, async (req: any, res) => {
       return res.status(403).json({ success: false });
     }
 
-    const messages = await Chat.find({
-      $or: [
-        { sender: myId, receiver: userId },
-        { sender: userId, receiver: myId }
-      ]
-    }).sort({ createdAt: 1 });
+    // const messages = await Chat.find({
+    //   $or: [
+    //     { sender: myId, receiver: userId },
+    //     { sender: userId, receiver: myId }
+    //   ]
+    // }).sort({ createdAt: 1 });
+
+const messages = await Chat.find({
+  $or: [
+    { sender: myId, receiver: userId },
+    { sender: userId, receiver: myId }
+  ]
+})
+.sort({ createdAt: 1 })
+.select("sender receiver message fileUrl fileType seen createdAt"); // ✅ ADD THIS
+
+
 
     // Auto mark as seen
     if (messages.length > 0) {
@@ -254,9 +283,10 @@ router.get("/group/:groupId", authenticate, async (req: any, res) => {
       }
     }
 
-    const messages = await Chat.find({ group_id: groupId })
-      .populate("sender", "name")
-      .sort({ createdAt: 1 });
+ const messages = await Chat.find({ group_id: groupId })
+  .populate("sender", "name")
+  .sort({ createdAt: 1 })
+  .select("sender message fileUrl fileType seen createdAt"); 
 
     res.json({ success: true, messages });
 

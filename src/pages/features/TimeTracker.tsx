@@ -115,7 +115,7 @@ const TimeTracker = () => (
       </motion.h2>
 
       <motion.p variants={fadeUp} custom={1} className="text-muted-foreground text-lg">
-        TeamTrack gives you powerful yet easy-to-use tools to track time with precision.
+        Multiclout gives you powerful yet easy-to-use tools to track time with precision.
         From one-click logging to smart timesheets and project insights, everything is
         built to help you stay organized and in control of your day.
       </motion.p>
@@ -141,7 +141,7 @@ const TimeTracker = () => (
         <p className="text-muted-foreground leading-relaxed mb-6">
           Start, pause, or stop the timer with a single click — no complex setup,
           no distractions. Whether you're switching between tasks or taking a break,
-          TeamTrack ensures that your time tracking remains fluid and interruption-free.
+          Multiclout TeamTrex ensures that your time tracking remains fluid and interruption-free.
           Perfect for fast-paced workflows and multitaskers.
         </p>
 
@@ -170,7 +170,7 @@ const TimeTracker = () => (
 
         <img
           src={dashboardImage}
-          alt="TeamTrack Dashboard"
+          alt="Multiclout Dashboard"
           className="w-full h-auto"
         />
 
@@ -256,7 +256,7 @@ const TimeTracker = () => (
     <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center mb-16">
 
       <motion.h2 variants={fadeUp} custom={0} className="text-4xl md:text-5xl font-bold">
-        Why Teams Trust <span className="text-gradient">TeamTrack Time Tracker</span>
+        Why Teams Trust <span className="text-gradient">Multiclout Time Tracker</span>
       </motion.h2>
 
     </motion.div>
@@ -268,7 +268,7 @@ const TimeTracker = () => (
         {
           icon: Clock,
           title: "Simple & Accurate",
-          desc: "Log time with just one click or set it to auto-track. TeamTrack makes time entry effortless and accurate.",
+          desc: "Log time with just one click or set it to auto-track. multiclout TeamTrex makes time entry effortless and accurate.",
         },
         {
           icon: BarChart3,

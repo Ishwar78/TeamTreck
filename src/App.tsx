@@ -62,6 +62,7 @@ import Terms from "./pages/Terms";
 import ChatPage from "./pages/ChatPage";
 import TaskPage from "./pages/TaskPage";
 import RoleManagement from "./pages/RoleManagement";
+import DailyReport from "./pages/DailyReport";
    
 
 
@@ -135,6 +136,7 @@ const App = () => (
               <Route path="/dashboard/chat" element={<CompanyAdminAuthGuard><ChatPage /></CompanyAdminAuthGuard>} />
               <Route path="/dashboard/task" element={<CompanyAdminAuthGuard><TaskPage /></CompanyAdminAuthGuard>} />
               <Route path="/dashboard/roles" element={<CompanyAdminAuthGuard><RoleManagement /></CompanyAdminAuthGuard>} />
+              <Route path="/dashboard/daily-report" element={<CompanyAdminAuthGuard><DailyReport /></CompanyAdminAuthGuard>} />
 
               {/* Super Admin */}
               <Route path="/super-admin" element={<SuperAdminAuthGuard><SuperAdmin /></SuperAdminAuthGuard>} />

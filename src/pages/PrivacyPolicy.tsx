@@ -47,7 +47,7 @@ const PrivacyPolicy = () => {
               className="text-white/90"
             >
               Your privacy is important to us. This Privacy Policy explains how
-              MULTICLOUTTeamTrEX collects, uses, and protects your information.
+              MULTICLOUT TeamTrex collects, uses, and protects your information.
             </motion.p>
           </motion.div>
 

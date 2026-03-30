@@ -85,7 +85,7 @@ const UrlTracking = () => (
       </div>
     </section>
 
-{/* Why Teams Use TeamTrack for URL Tracking */}
+{/* Why Teams Use  for URL Tracking */}
 <section className="py-24">
   <div className="container mx-auto px-4">
 
@@ -100,7 +100,7 @@ const UrlTracking = () => (
         custom={0}
         className="text-3xl md:text-4xl font-bold text-foreground"
       >
-        Why Teams Use <span className="text-gradient">TeamTrack</span> for URL Tracking
+        Why Teams Use <span className="text-gradient">Multiclout TeamTrex </span> for URL Tracking
       </motion.h2>
     </motion.div>
 

@@ -104,7 +104,7 @@ const ProductivityAnalytics = () => (
         custom={1}
         className="text-white/90"
       >
-        TeamTrack’s analytics help you lead smarter, remove guesswork,
+        Multiclout’s analytics help you lead smarter, remove guesswork,
         and create a more focused, efficient work culture.
       </motion.p>
     </motion.div>
