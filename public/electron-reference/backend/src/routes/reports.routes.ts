@@ -10,15 +10,17 @@ import { Types } from 'mongoose';
 
 const router = Router();
 
-// GET /summary - Overall company stats
-router.get('/summary', authenticate, requireRole('company_admin', 'sub_admin'), async (req: any, res, next) => {
+// GET /summary - Overall company / user stats and chart data
+router.get('/summary', authenticate, async (req: any, res, next) => {
     try {
         const companyId = new Types.ObjectId(req.auth.company_id as string);
         const { period, userId, startDate, endDate } = req.query;
 
         const matchQuery: any = { company_id: companyId };
 
-        if (userId && userId !== 'All Users') {
+        if (req.auth.role === 'employee' || req.auth.role === 'intern' || req.auth.role === 'user') {
+            matchQuery.user_id = new Types.ObjectId(req.auth.user_id as string);
+        } else if (userId && userId !== 'All Users') {
             matchQuery.user_id = new Types.ObjectId(userId as string);
         }
 
@@ -56,16 +58,10 @@ router.get('/summary', authenticate, requireRole('company_admin', 'sub_admin'), 
 
         const stats = totalStats[0] || { totalActive: 0, totalIdle: 0, totalDuration: 0, totalScreenshots: 0, avgScore: 0 };
 
-        // Weekly data (last 7 days active hours)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
+        // Chart data uses the exact same matchQuery so it reflects the selected period and user
         const weeklyStats = await Session.aggregate([
             {
-                $match: {
-                    company_id: companyId,
-                    start_time: { $gte: sevenDaysAgo }
-                }
+                $match: matchQuery
             },
             {
                 $group: {

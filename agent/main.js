@@ -1,4 +1,4 @@
-const { app, BrowserWindow, desktopCapturer, ipcMain, powerMonitor } = require("electron");
+const { app, BrowserWindow, desktopCapturer, ipcMain, powerMonitor, shell } = require("electron");
 const path = require("path");
 const axios = require("axios");
 const FormData = require("form-data");
@@ -649,4 +649,10 @@ ipcMain.on("agent-logout", async () => {
   sessionId = null;
   token = null;
 
+});
+
+/* ================= OPEN DASHBOARD ================= */
+
+ipcMain.on("open-dashboard", (event, url) => {
+  shell.openExternal(url);
 });

@@ -9,13 +9,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Send, FileText, User } from "lucide-react";
+import { Send, FileText, User, Paperclip } from "lucide-react";
 
 interface Report {
   _id: string;
   title: string;
   subject: string;
   body: string;
+  fileUrl?: string;
+  originalFileName?: string;
   user_id: { _id: string; name: string; email: string; role: string };
   createdAt: string;
 }
@@ -29,6 +31,8 @@ const DailyReport = () => {
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const isAdmin = user?.role === "company_admin" || user?.role === "super_admin" || user?.role === "sub_admin";
 
@@ -58,20 +62,44 @@ const DailyReport = () => {
       return;
     }
 
+    setUploading(true);
     try {
+      let fileUrl = "";
+      let originalFileName = "";
+
+      if (attachedFile) {
+         const formData = new FormData();
+         formData.append("file", attachedFile);
+         const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://multiclout.in";
+         const uploadRes = await fetch(`${API_BASE}/api/daily-report/upload`, {
+           method: "POST",
+           headers: { Authorization: `Bearer ${token}` },
+           body: formData,
+         });
+         const uploadData = await uploadRes.json();
+         if (!uploadRes.ok || !uploadData.success) {
+           throw new Error(uploadData.message || "File upload failed");
+         }
+         fileUrl = uploadData.fileUrl;
+         originalFileName = uploadData.originalName;
+      }
+
       const data = await apiFetch(`/api/daily-report`, token, {
         method: "POST",
-        body: JSON.stringify({ title, subject, body }),
+        body: JSON.stringify({ title, subject, body, fileUrl, originalFileName }),
       });
       if (data.success) {
         toast.success("Daily report sent successfully!");
         setTitle("");
         setSubject("");
         setBody("");
+        setAttachedFile(null);
         fetchReports();
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to send report");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -115,8 +143,19 @@ const DailyReport = () => {
                 className="resize-none"
               />
             </div>
-            <Button type="submit" className="w-full gap-2">
-              <Send size={16} /> Send Report
+            <div className="space-y-2">
+              <Label htmlFor="file">Attachment (Optional, e.g. Excel/CSV)</Label>
+              <Input
+                id="file"
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                onChange={(e) => setAttachedFile(e.target.files?.[0] || null)}
+                className="cursor-pointer"
+              />
+              {attachedFile && <p className="text-xs text-muted-foreground mt-1">Selected: {attachedFile.name}</p>}
+            </div>
+            <Button type="submit" className="w-full gap-2" disabled={uploading}>
+              <Send size={16} /> {uploading ? "Sending..." : "Send Report"}
             </Button>
           </form>
         </CardContent>
@@ -144,6 +183,11 @@ const DailyReport = () => {
                   <h4 className="font-semibold text-foreground mb-1">{r.title}</h4>
                   <p className="font-medium text-sm text-primary mb-2">{r.subject}</p>
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">{r.body}</p>
+                  {r.fileUrl && (
+                    <a href={(import.meta.env.VITE_API_BASE_URL || "http://multiclout.in") + r.fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 mt-3 text-xs text-blue-600 hover:underline hover:text-blue-800 w-fit p-1.5 px-2 bg-blue-500/10 rounded-md transition-colors">
+                      <Paperclip size={14} /> {r.originalFileName || "Attached File"}
+                    </a>
+                  )}
                 </div>
               ))}
             </div>
@@ -189,6 +233,33 @@ const DailyReport = () => {
                   <div className="bg-muted/30 p-4 rounded-md whitespace-pre-wrap text-sm border border-border">
                     {r.body}
                   </div>
+                 {r.fileUrl && (
+  <div className="mt-3 flex gap-2 flex-wrap">
+
+    {/* ✅ Download Button */}
+    <a
+      href={(import.meta.env.VITE_API_BASE_URL || "http://multiclout.in") + r.fileUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded border border-blue-200 transition-colors"
+    >
+      <Paperclip size={16} /> Download
+    </a>
+
+    {/* ✅ View Button (without download) */}
+    {/* <a
+      href={`https://docs.google.com/viewer?url=${encodeURIComponent(
+  (import.meta.env.VITE_API_BASE_URL || "http://multiclout.in") + r.fileUrl
+)}&embedded=true`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-2 text-sm font-medium text-green-600 hover:text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded border border-green-200 transition-colors"
+    >
+      👁 View
+    </a> */}
+
+  </div>
+)}
                 </div>
               </div>
             ))}

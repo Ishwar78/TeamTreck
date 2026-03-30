@@ -6,6 +6,23 @@ import { AppError } from '../utils/errors';
 
 const router = Router();
 
+// GET summary count of pending tasks
+router.get('/summary', authenticate, async (req, res, next) => {
+  try {
+    const { role, company_id, user_id } = req.auth!;
+    let query: any = { company_id, status: 'pending' };
+
+    if (role === 'user' || role === 'employee' || role === 'intern') {
+      query.assignedTo = user_id;
+    }
+
+    const count = await Task.countDocuments(query);
+    res.json({ success: true, count });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET tasks 
 router.get('/', authenticate, async (req, res, next) => {
   try {

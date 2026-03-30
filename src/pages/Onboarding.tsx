@@ -947,7 +947,7 @@ const Onboarding = () => {
                   </Button>
                 )}
                 {isLastStep ? (
-                  <Button onClick={() => navigate("/dashboard")} className="gap-1" size="lg">
+                  <Button onClick={() => window.location.href = "/dashboard"} className="gap-1" size="lg">
                     <Rocket size={14} /> Go to Dashboard
                   </Button>
                 ) : (

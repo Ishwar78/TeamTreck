@@ -2,8 +2,36 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { DailyReport } from '../models/DailyReport';
 import { authenticate } from '../middleware/auth';
 import { AppError } from '../utils/errors';
+import multer from 'multer';
+import fs from 'fs';
 
 export const dailyReportRoutes = Router();
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = 'uploads/reports';
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  }
+});
+
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+});
+
+dailyReportRoutes.post('/upload', authenticate, upload.single('file'), (req: any, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
+    const fileUrl = `/api/uploads/reports/${req.file.filename}`;
+    res.json({ success: true, fileUrl, originalName: req.file.originalname });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'File upload failed' });
+  }
+});
 
 // GET all reports for a company (Admin sees all, User sees own)
 dailyReportRoutes.get('/', authenticate, async (req: Request, res: Response, next: NextFunction) => {
@@ -32,7 +60,7 @@ dailyReportRoutes.get('/', authenticate, async (req: Request, res: Response, nex
 // POST to submit a new daily report
 dailyReportRoutes.post('/', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { title, subject, body } = req.body;
+    const { title, subject, body, fileUrl, originalFileName } = req.body;
 
     if (!title || !subject || !body) {
       throw new AppError('Title, Subject, and Body are required', 400);
@@ -44,6 +72,8 @@ dailyReportRoutes.post('/', authenticate, async (req: Request, res: Response, ne
       title,
       subject,
       body,
+      fileUrl,
+      originalFileName,
       company_id,
       user_id,
     });

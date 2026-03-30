@@ -12,7 +12,10 @@ contextBridge.exposeInMainWorld("agentAPI", {
 
   sendActivityState: (data) => ipcRenderer.send("activity-state", data),
 
-  logout: () => ipcRenderer.send("agent-logout")
+  logout: () => ipcRenderer.send("agent-logout"),
+
+  // ✅ NEW ADD
+  openDashboard: (url) => ipcRenderer.send("open-dashboard", url)
 
 });
 

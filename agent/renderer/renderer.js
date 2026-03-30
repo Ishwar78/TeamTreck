@@ -44,6 +44,8 @@ const dot = document.querySelector(".dot");
 const deviceText = document.getElementById("deviceText");
 const activityStatus = document.getElementById("activityStatus");
 
+const dashboardBtn = document.getElementById("dashboardBtn");
+
 deviceText.innerText = deviceId;
 
 /* ================= STATUS ================= */
@@ -198,6 +200,7 @@ loginBtn.onclick = async () => {
 
     token = data.token;
     localStorage.setItem("auth_token", token);
+    localStorage.setItem("auth_user", JSON.stringify(data.user)); // Pass user context to agent frontend
 
     loginBtn.innerHTML = "✔ Logged In";
     loginBtn.style.background = "#28c76f";
@@ -213,6 +216,24 @@ loginBtn.onclick = async () => {
     loginBtn.disabled = false;
     loginBtn.innerHTML = "Login";
   }
+};
+
+
+dashboardBtn.onclick = () => {
+
+  if (!token) {
+    setStatus(" login First Use your I'd Password ", "error");
+    return;
+  }
+
+  // ⚠️ apna frontend dashboard URL yaha dal
+  const DASHBOARD_URL = "https://multiclout.in/autologin";
+
+  // token aur user auth dono pass kr rhe hain
+  const authUserString = localStorage.getItem("auth_user");
+  const finalURL = `${DASHBOARD_URL}?token=${token}&user=${encodeURIComponent(authUserString)}`;
+
+  window.agentAPI.openDashboard(finalURL);
 };
 
 /* ================= START SESSION ================= */
@@ -355,6 +376,7 @@ logoutBtn.onclick = async () => {
     window.agentAPI.logout();
 
     localStorage.removeItem("auth_token");
+    localStorage.removeItem("auth_user");
 
     token = null;
 

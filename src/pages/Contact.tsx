@@ -119,7 +119,7 @@ const res = await axios.post(`${API}/api/public/book-demo`, {
                 </div>
                 <div>
                   <p className="text-sm text-white/70">Email</p>
-                  <p className="font-medium">support@multiclouteamtrex.com</p>
+                  <p className="font-medium">info@multiclout.in</p>
                 </div>
               </div>
 
@@ -129,7 +129,7 @@ const res = await axios.post(`${API}/api/public/book-demo`, {
                 </div>
                 <div>
                   <p className="text-sm text-white/70">Mobile Number</p>
-                  <p className="font-medium">+91 8950329919</p>
+                  <p className="font-medium">+91 7206123452</p>
                 </div>
               </div>
 
@@ -139,7 +139,7 @@ const res = await axios.post(`${API}/api/public/book-demo`, {
                 </div>
                 <div>
                   <p className="text-sm text-white/70">WhatsApp</p>
-                  <p className="font-medium">+91 89503 29919</p>
+                  <p className="font-medium">+91 7206123452</p>
                 </div>
               </div>
 

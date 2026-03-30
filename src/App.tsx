@@ -63,6 +63,8 @@ import ChatPage from "./pages/ChatPage";
 import TaskPage from "./pages/TaskPage";
 import RoleManagement from "./pages/RoleManagement";
 import DailyReport from "./pages/DailyReport";
+import WorkGraph from "./pages/WorkGraph";
+import AutoLogin from "./pages/AutoLogin";
    
 
 
@@ -110,6 +112,7 @@ const App = () => (
               <Route path="/about" element={<About />} />
 
 <Route path="/terms" element={<Terms />} />
+              <Route path="/autologin" element={<AutoLogin />} />
 
               {/* Company Dashboard */}
               <Route path="/dashboard" element={<CompanyAdminAuthGuard><Dashboard /></CompanyAdminAuthGuard>} />
@@ -137,6 +140,7 @@ const App = () => (
               <Route path="/dashboard/task" element={<CompanyAdminAuthGuard><TaskPage /></CompanyAdminAuthGuard>} />
               <Route path="/dashboard/roles" element={<CompanyAdminAuthGuard><RoleManagement /></CompanyAdminAuthGuard>} />
               <Route path="/dashboard/daily-report" element={<CompanyAdminAuthGuard><DailyReport /></CompanyAdminAuthGuard>} />
+              <Route path="/dashboard/work-graph" element={<CompanyAdminAuthGuard><WorkGraph /></CompanyAdminAuthGuard>} />
 
               {/* Super Admin */}
               <Route path="/super-admin" element={<SuperAdminAuthGuard><SuperAdmin /></SuperAdminAuthGuard>} />

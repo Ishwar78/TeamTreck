@@ -57,7 +57,13 @@ router.get("/summary", authenticate, async (req: any, res) => {
 
     // Simplified group unread (just total for now, or sophisticated per-user seen)
     const groupCounts = await Chat.aggregate([
-      { $match: { group_id: { $exists: true }, company_id: new mongoose.Types.ObjectId(myCompany) } },
+      { $match: { 
+          group_id: { $exists: true }, 
+          company_id: new mongoose.Types.ObjectId(myCompany),
+          seen: false,
+          sender: { $ne: new mongoose.Types.ObjectId(myId) }
+        } 
+      },
       { $group: { _id: "$group_id", count: { $sum: 1 } } }
     ]);
 
@@ -116,25 +122,41 @@ router.get("/peers", authenticate, async (req: any, res) => {
   try {
     const myId = req.auth.user_id;
     const myCompany = req.auth.company_id;
+    let users: any[] = [];
 
     if (req.auth.role === "company_admin" || req.auth.role === "sub_admin") {
-      const users = await User.find({ company_id: myCompany, role: { $in: ["employee", "intern"] } }, "_id name email role").lean();
-      return res.json({ success: true, users });
+      users = await User.find({ company_id: myCompany, role: { $in: ["employee", "intern"] } }, "_id name email role").lean();
+    } else {
+      // Find all groups where I am a member
+      const myGroups = await Group.find({ users: myId, company_id: myCompany });
+      const memberIds = new Set<string>();
+      myGroups.forEach((g: any) => g.users.forEach((uid: any) => memberIds.add(String(uid))));
+      memberIds.delete(String(myId)); // Remove self
+
+      users = await User.find({ _id: { $in: Array.from(memberIds) } }, "_id name email role").lean();
+      
+      // Also include Admin
+      let admin = await User.findOne({ company_id: myCompany, role: "company_admin" }, "_id name email role").lean();
+      if (admin) users.push(admin as any);
     }
 
-    // Find all groups where I am a member
-    const myGroups = await Group.find({ users: myId, company_id: myCompany });
-    const memberIds = new Set<string>();
-    myGroups.forEach((g: any) => g.users.forEach((uid: any) => memberIds.add(String(uid))));
-    memberIds.delete(String(myId)); // Remove self
+    // Check online status (ActiveLog in last 5 minutes)
+    const { ActivityLog } = await import('../models/ActivityLog');
+    const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000);
 
-    const users = await User.find({ _id: { $in: Array.from(memberIds) } }, "_id name email role").lean();
-    
-    // Also include Admin
-    let admin = await User.findOne({ company_id: myCompany, role: "company_admin" }, "_id name email role").lean();
-    if (admin) users.push(admin as any);
+    const activeUsers = await ActivityLog.distinct('user_id', {
+      company_id: myCompany,
+      timestamp: { $gte: fiveMinsAgo }
+    });
 
-    res.json({ success: true, users });
+    const activeUserIdsMap = new Set(activeUsers.map((id: any) => id.toString()));
+
+    const usersWithStatus = users.map((u: any) => ({
+      ...u,
+      isActive: activeUserIdsMap.has(u._id.toString())
+    }));
+
+    res.json({ success: true, users: usersWithStatus });
   } catch (err) {
     res.status(500).json({ success: false });
   }

@@ -107,15 +107,6 @@ useEffect(() => {
 
 
 
-
-
-
-
-
-
-
-
-
   useEffect(() => {
     const fetchData = async () => {
       if (!token || !user) return;
@@ -148,7 +139,7 @@ useEffect(() => {
     };
 
     fetchData();
-    const countInterval = setInterval(fetchData, 4000); // Poll every 4s for global unread counts
+    const countInterval = setInterval(fetchData, 4000); 
     return () => clearInterval(countInterval);
   }, [token, user]);
 
@@ -412,8 +403,15 @@ const testNotification = () => {
                   : "text-gray-300 hover:bg-gray-800"
               }`}
             >
-              <span>{u.name}</span>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
+                <span className="truncate">{u.name}</span>
+                {u.isActive ? (
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_6px_rgba(34,197,94,0.8)] shrink-0" title="Active" />
+                ) : (
+                  <div className="w-2 h-2 bg-red-500 rounded-full shadow-[0_0_6px_rgba(239,68,68,0.8)] shrink-0" title="Inactive" />
+                )}
+              </div>
+              <div className="flex items-center gap-2">
                 {unread > 0 && <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded-full">{unread}</span>}
               </div>
             </div>
@@ -481,7 +479,8 @@ const testNotification = () => {
           ) : null}
 
           {messages.map((m, i) => {
-            const isMe = m.sender === user?.id || m.sender?._id === user?.id;
+            const senderId = typeof m.sender === 'object' ? (m.sender?._id || m.sender?.id) : m.sender;
+            const isMe = String(senderId) === String(user?.id);
             const senderName = typeof m.sender === 'object' ? m.sender?.name : "User";
 
             return (
@@ -533,10 +532,14 @@ const testNotification = () => {
                       {formatMessageDate(m.createdAt)}
                     </div>
                     {isMe && (
-  <div className="text-[10px] text-right opacity-70">
-    {m.seen ? "✅ Seen" : "✔ Sent"}
-  </div>
-)}
+                      <div className="text-[10px] text-right mt-0.5 opacity-90 font-medium">
+                        {m.seen ? (
+                          <span className="text-blue-300">✓✓ Seen</span>
+                        ) : (
+                          <span className="text-gray-300">✓ Sent</span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
               </div>

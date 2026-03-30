@@ -4,6 +4,8 @@ export interface IDailyReport extends Document {
   title: string;
   subject: string;
   body: string;
+  fileUrl?: string;
+  originalFileName?: string;
   user_id: mongoose.Types.ObjectId;
   company_id: mongoose.Types.ObjectId;
   createdAt: Date;
@@ -15,6 +17,8 @@ const dailyReportSchema = new Schema<IDailyReport>(
     title: { type: String, required: true },
     subject: { type: String, required: true },
     body: { type: String, required: true },
+    fileUrl: { type: String },
+    originalFileName: { type: String },
     user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     company_id: { type: Schema.Types.ObjectId, ref: 'Company', required: true },
   },

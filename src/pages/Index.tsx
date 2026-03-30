@@ -19,7 +19,7 @@ import usertreck from "@/images/useractivity.png";
 import chatimage from "@/images/Chat.png";
 import rolemanage from "@/images/Rolemanage12.png";
 import taskimage from "@/images/task.png";
-import invitei from "@/images/invite.png"
+import invitei from "@/images/invitemember12.png"
 
 import StartTracking from "./StartTracking";
 import timelogsimage from "@/images/Timelogs5.png";

@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Users, UsersRound, Clock, Camera, Globe, BarChart3,
   Settings, CreditCard, LogOut, ChevronLeft, UserPlus, Building2,
-  Activity, FileText, Bell, ShieldBan, Timer, CalendarCheck, PlayCircle, LifeBuoy, MessageCircle, CheckSquare
+  Activity, FileText, Bell, ShieldBan, Timer, CalendarCheck, PlayCircle, LifeBuoy, MessageCircle, CheckSquare, TrendingUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationBell, NotificationDropdown, useNotifications } from "@/components/NotificationCenter";
@@ -41,14 +41,15 @@ const menuItems: MenuItem[] = [
   { icon: CalendarCheck, label: "Attendance", path: "/dashboard/attendance", permission: "view_attendance", module: "attendance" },
   // { icon: PlayCircle, label: "Sessions", path: "/dashboard/sessions", permission: "view_sessions" },
 
-
   // ✅ Chat
  { icon: MessageCircle, label: "Chat", path: "/dashboard/chat", permission: "view_team", module: "chat" },
 // ✅ Task
 { icon: CheckSquare, label: "Tasks", path: "/dashboard/task", permission: "view_dashboard", module: "tasks" },
 
+{ icon: TrendingUp, label: "Work Graph", path: "/dashboard/work-graph", permission: "view_dashboard" },
 
-// ✅ NEW ADD
+
+
 { icon: BarChart3, label: "Daily Report", path: "/dashboard/daily-report", permission: "view_daily_reports", module: "daily_reports" },
 
 { icon: ShieldBan, label: "Role Management", path: "/dashboard/roles", permission: "manage_roles", module: "roles" },
@@ -70,6 +71,7 @@ const DashboardSidebar = ({ onCloseMobile }: DashboardSidebarProps) => {
   const { can, canAction } = usePermissions();
   const { user, logout, token } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [taskCount, setTaskCount] = useState(0);
   
   const totalUnreadRef = useRef(-1); // Switch to -1 as initial uninitialized state
   const lastSoundTriggerRef = useRef(0);
@@ -91,11 +93,6 @@ const DashboardSidebar = ({ onCloseMobile }: DashboardSidebarProps) => {
           
           setUnreadCount(totalUnread);
 
-          // 🔥 GLOBAL SOUND NOTIFICATION LOGIC
-          // Only play if:
-          // 1. Not on Chat page (ChatPage handles its own sounds)
-          // 2. Not the first load (to avoid sound on mount)
-          // 3. Count has increased
           if (!isChatPage && totalUnreadRef.current !== -1 && totalUnread > totalUnreadRef.current) {
              const now = Date.now();
              if (now - lastSoundTriggerRef.current > 1000) { // 1s cooldown
@@ -110,6 +107,15 @@ const DashboardSidebar = ({ onCloseMobile }: DashboardSidebarProps) => {
         }
       } catch (err) {
         console.error("Sidebar count fetch error", err);
+      }
+
+      try {
+        const taskData = await apiFetch("/api/tasks/summary", token);
+        if (taskData.success) {
+          setTaskCount(taskData.count || 0);
+        }
+      } catch (err) {
+        console.error("Task count fetch error", err);
       }
     };
 
@@ -205,6 +211,14 @@ const DashboardSidebar = ({ onCloseMobile }: DashboardSidebarProps) => {
                   collapsed && "absolute top-1 right-1"
                 )}>
                   {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+              {item.label === "Tasks" && taskCount > 0 && (
+                <span className={cn(
+                  "bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center justify-center min-w-[18px] h-[18px]",
+                  collapsed && "absolute top-1 right-1"
+                )}>
+                  {taskCount > 99 ? "99+" : taskCount}
                 </span>
               )}
             </Link>

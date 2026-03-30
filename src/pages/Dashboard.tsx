@@ -10,6 +10,30 @@ const Dashboard = () => {
   const [stats, setStats] = useState<any>(null);
   const [error, setError] = useState("");
 
+
+
+
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const urlToken = params.get("token");
+
+  if (urlToken) {
+    localStorage.setItem("auth_token", urlToken);
+
+    // clean URL (important)
+    window.history.replaceState({}, document.title, "/dashboard");
+
+    // reload to apply auth context
+    window.location.reload();
+  }
+}, []);
+
+
+
+
+
+
+
   useEffect(() => {
     if (!loading && token && user?.role !== 'employee') {
       fetchStats();

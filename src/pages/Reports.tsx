@@ -132,7 +132,7 @@ const Reports = () => {
               <Select value={period} onValueChange={setPeriod}>
                 <SelectTrigger className="w-[140px] h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="daily">Today</SelectItem>
                   <SelectItem value="weekly">Weekly</SelectItem>
                   <SelectItem value="monthly">Monthly</SelectItem>
                   <SelectItem value="custom">Custom</SelectItem>
